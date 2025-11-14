@@ -16,11 +16,41 @@ namespace ConsoleRpgEntities.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    X = table.Column<int>(type: "int", nullable: false),
+                    Y = table.Column<int>(type: "int", nullable: false),
+                    NorthRoomId = table.Column<int>(type: "int", nullable: true),
+                    SouthRoomId = table.Column<int>(type: "int", nullable: true),
+                    EastRoomId = table.Column<int>(type: "int", nullable: true),
+                    WestRoomId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Rooms", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Rooms_Rooms_NorthRoomId",
+                        column: x => x.NorthRoomId,
+                        principalTable: "Rooms",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Rooms_Rooms_SouthRoomId",
+                        column: x => x.SouthRoomId,
+                        principalTable: "Rooms",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Rooms_Rooms_EastRoomId",
+                        column: x => x.EastRoomId,
+                        principalTable: "Rooms",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Rooms_Rooms_WestRoomId",
+                        column: x => x.WestRoomId,
+                        principalTable: "Rooms",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             // Add RoomId column to Players table
@@ -48,6 +78,27 @@ namespace ConsoleRpgEntities.Migrations
                 name: "IX_Monsters_RoomId",
                 table: "Monsters",
                 column: "RoomId");
+
+            // Create indexes for Room exit foreign keys
+            migrationBuilder.CreateIndex(
+                name: "IX_Rooms_NorthRoomId",
+                table: "Rooms",
+                column: "NorthRoomId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Rooms_SouthRoomId",
+                table: "Rooms",
+                column: "SouthRoomId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Rooms_EastRoomId",
+                table: "Rooms",
+                column: "EastRoomId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Rooms_WestRoomId",
+                table: "Rooms",
+                column: "WestRoomId");
 
             // Add foreign key constraint for Players -> Rooms
             migrationBuilder.AddForeignKey(
@@ -85,6 +136,22 @@ namespace ConsoleRpgEntities.Migrations
             migrationBuilder.DropIndex(
                 name: "IX_Monsters_RoomId",
                 table: "Monsters");
+
+            migrationBuilder.DropIndex(
+                name: "IX_Rooms_NorthRoomId",
+                table: "Rooms");
+
+            migrationBuilder.DropIndex(
+                name: "IX_Rooms_SouthRoomId",
+                table: "Rooms");
+
+            migrationBuilder.DropIndex(
+                name: "IX_Rooms_EastRoomId",
+                table: "Rooms");
+
+            migrationBuilder.DropIndex(
+                name: "IX_Rooms_WestRoomId",
+                table: "Rooms");
 
             // Drop columns
             migrationBuilder.DropColumn(

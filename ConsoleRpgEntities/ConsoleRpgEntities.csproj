@@ -9,13 +9,10 @@
   <ItemGroup>
     <Compile Remove="Models\Abilities\MonsterAbilities\**" />
     <Compile Remove="Models\Characters\Npcs\**" />
-    <Compile Remove="Models\Rooms\**" />
     <EmbeddedResource Remove="Models\Abilities\MonsterAbilities\**" />
     <EmbeddedResource Remove="Models\Characters\Npcs\**" />
-    <EmbeddedResource Remove="Models\Rooms\**" />
     <None Remove="Models\Abilities\MonsterAbilities\**" />
     <None Remove="Models\Characters\Npcs\**" />
-    <None Remove="Models\Rooms\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -67,6 +64,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Migrations\Scripts\SeedItems.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Migrations\Scripts\SeedRooms.rollback.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Migrations\Scripts\SeedRooms.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
