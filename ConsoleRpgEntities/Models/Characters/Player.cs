@@ -18,7 +18,6 @@ namespace ConsoleRpgEntities.Models.Characters
         public int? RoomId { get; set; }
 
         // Navigation properties
-        public virtual Inventory Inventory { get; set; }
         public virtual Equipment Equipment { get; set; }
         public virtual ICollection<Ability> Abilities { get; set; }
         public virtual Room Room { get; set; }

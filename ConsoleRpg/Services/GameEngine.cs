@@ -30,6 +30,7 @@ public class GameEngine
     {
         switch (choice)
         {
+            // Basic Features
             case "1":
                 AddCharacter();
                 break;
@@ -42,7 +43,41 @@ public class GameEngine
             case "4":
                 SearchCharacterByName();
                 break;
+
+            // C-Level Features
             case "5":
+                AddAbilityToCharacter();
+                break;
+            case "6":
+                DisplayCharacterAbilities();
+                break;
+            case "7":
+                AttackWithAbility();
+                break;
+
+            // B-Level Features
+            case "8":
+                AddRoom();
+                break;
+            case "9":
+                DisplayRoomDetails();
+                break;
+            case "10":
+                NavigateRooms();
+                break;
+
+            // A-Level Features
+            case "11":
+                ListCharactersInRoomByAttribute();
+                break;
+            case "12":
+                ListAllRoomsWithCharacters();
+                break;
+            case "13":
+                FindEquipmentLocation();
+                break;
+
+            case "0":
                 _logger.LogInformation("User exited the application");
                 _outputManager.WriteLine("Exiting game...", ConsoleColor.Red);
                 _outputManager.Display();
@@ -214,4 +249,220 @@ public class GameEngine
         _outputManager.Display();
         Console.ReadKey();
     }
+
+    #region C-Level Requirements
+
+    // TODO: Implement this method
+    // Requirements:
+    // - Prompt the user to select an existing character (by ID or name)
+    // - Display a list of available abilities (you may need to create abilities first or use existing ones)
+    // - Prompt user to select an ability to add
+    // - Associate the ability with the character using the many-to-many relationship
+    // - Save changes to the database
+    // - Display confirmation message with the character name and ability name
+    // - Log the operation
+    private void AddAbilityToCharacter()
+    {
+        _logger.LogInformation("User selected Add Ability to Character");
+        _outputManager.WriteLine("=== Add Ability to Character ===", ConsoleColor.Yellow);
+
+        // TODO: Implement this method
+        _outputManager.WriteLine("This feature is not yet implemented.", ConsoleColor.Red);
+        _outputManager.WriteLine("TODO: Allow users to add abilities to existing characters.", ConsoleColor.Yellow);
+
+        _outputManager.Display();
+        Thread.Sleep(2000);
+    }
+
+    // TODO: Implement this method
+    // Requirements:
+    // - Prompt the user to select a character (by ID or name)
+    // - Retrieve the character and their abilities from the database (use Include or lazy loading)
+    // - Display the character's name and basic info
+    // - Display all abilities associated with that character
+    // - For each ability, show: Name, Description, and any other relevant properties (e.g., Damage, Distance for ShoveAbility)
+    // - Handle the case where the character has no abilities
+    // - Log the operation
+    private void DisplayCharacterAbilities()
+    {
+        _logger.LogInformation("User selected Display Character Abilities");
+        _outputManager.WriteLine("=== Display Character Abilities ===", ConsoleColor.Yellow);
+
+        // TODO: Implement this method
+        _outputManager.WriteLine("This feature is not yet implemented.", ConsoleColor.Red);
+        _outputManager.WriteLine("TODO: Display all abilities for a selected character.", ConsoleColor.Yellow);
+
+        _outputManager.Display();
+        Thread.Sleep(2000);
+    }
+
+    // TODO: Implement this method
+    // Requirements:
+    // - Prompt user to select an attacking character
+    // - Prompt user to select a target (another character or monster)
+    // - Display available abilities for the attacker
+    // - Prompt user to select an ability to use
+    // - Execute the ability's Activate method (this should apply damage/effects)
+    // - Display the results of the attack (damage dealt, effects applied, etc.)
+    // - Update health values in the database
+    // - Log the operation
+    private void AttackWithAbility()
+    {
+        _logger.LogInformation("User selected Attack with Ability");
+        _outputManager.WriteLine("=== Attack with Ability ===", ConsoleColor.Yellow);
+
+        // TODO: Implement this method
+        _outputManager.WriteLine("This feature is not yet implemented.", ConsoleColor.Red);
+        _outputManager.WriteLine("TODO: Allow character to attack using an ability.", ConsoleColor.Yellow);
+
+        _outputManager.Display();
+        Thread.Sleep(2000);
+    }
+
+    #endregion
+
+    #region B-Level Requirements
+
+    // TODO: Implement this method
+    // Requirements:
+    // - Prompt user for room name
+    // - Prompt user for room description
+    // - Optionally prompt to add a character/monster to the room (by ID)
+    // - Create a new Room entity
+    // - Save to the database
+    // - Display confirmation with room details
+    // - Log the operation
+    private void AddRoom()
+    {
+        _logger.LogInformation("User selected Add Room");
+        _outputManager.WriteLine("=== Add New Room ===", ConsoleColor.Yellow);
+
+        // TODO: Implement this method
+        _outputManager.WriteLine("This feature is not yet implemented.", ConsoleColor.Red);
+        _outputManager.WriteLine("TODO: Allow users to create new rooms.", ConsoleColor.Yellow);
+
+        _outputManager.Display();
+        Thread.Sleep(2000);
+    }
+
+    // TODO: Implement this method
+    // Requirements:
+    // - Prompt user to select a room (by ID or name)
+    // - Retrieve room from database with related data (Include Players and Monsters)
+    // - Display room name and description
+    // - Display list of all players in the room (or message if none)
+    // - Display list of all monsters in the room (or message if none)
+    // - Handle case where room is empty gracefully
+    // - Log the operation
+    private void DisplayRoomDetails()
+    {
+        _logger.LogInformation("User selected Display Room Details");
+        _outputManager.WriteLine("=== Display Room Details ===", ConsoleColor.Yellow);
+
+        // TODO: Implement this method
+        _outputManager.WriteLine("This feature is not yet implemented.", ConsoleColor.Red);
+        _outputManager.WriteLine("TODO: Display detailed information about a room and its inhabitants.", ConsoleColor.Yellow);
+
+        _outputManager.Display();
+        Thread.Sleep(2000);
+    }
+
+    // TODO: Implement this method
+    // Requirements:
+    // - Display list of all available rooms
+    // - Prompt user to select a character that will navigate
+    // - Allow user to move character between rooms
+    // - Update character's RoomId in the database
+    // - Display room details upon entering (name, description, inhabitants)
+    // - Provide option to move to another room or exit navigation
+    // - BONUS: Use Spectre.Console or another library to display a map
+    // - Log the operation
+    private void NavigateRooms()
+    {
+        _logger.LogInformation("User selected Navigate Rooms");
+        _outputManager.WriteLine("=== Navigate Rooms ===", ConsoleColor.Yellow);
+
+        // TODO: Implement this method
+        _outputManager.WriteLine("This feature is not yet implemented.", ConsoleColor.Red);
+        _outputManager.WriteLine("TODO: Allow characters to move between rooms.", ConsoleColor.Yellow);
+        _outputManager.WriteLine("BONUS: Consider adding a map visualization using Spectre.Console.", ConsoleColor.Magenta);
+
+        _outputManager.Display();
+        Thread.Sleep(2000);
+    }
+
+    #endregion
+
+    #region A-Level Requirements
+
+    // TODO: Implement this method
+    // Requirements:
+    // - Prompt user to select a room
+    // - Prompt user to select an attribute to search by (Health, Attack/Equipment, Name, etc.)
+    // - Prompt user for search criteria (e.g., "Health > 50", "Name contains 'Bob'")
+    // - Query the database for characters in that room matching the criteria
+    // - Display matching characters with relevant details
+    // - Handle case where no characters match
+    // - Log the operation
+    private void ListCharactersInRoomByAttribute()
+    {
+        _logger.LogInformation("User selected List Characters in Room by Attribute");
+        _outputManager.WriteLine("=== List Characters in Room by Attribute ===", ConsoleColor.Yellow);
+
+        // TODO: Implement this method
+        _outputManager.WriteLine("This feature is not yet implemented.", ConsoleColor.Red);
+        _outputManager.WriteLine("TODO: Find characters in a room matching specific criteria.", ConsoleColor.Yellow);
+
+        _outputManager.Display();
+        Thread.Sleep(2000);
+    }
+
+    // TODO: Implement this method
+    // Requirements:
+    // - Query database for all rooms
+    // - For each room, retrieve all characters (Players) in that room
+    // - Display in a formatted list grouped by room
+    // - Show room name and description
+    // - Under each room, list all characters with their details
+    // - Handle rooms with no characters gracefully
+    // - Consider using a formatted table or grouped display
+    // - Log the operation
+    private void ListAllRoomsWithCharacters()
+    {
+        _logger.LogInformation("User selected List All Rooms with Characters");
+        _outputManager.WriteLine("=== List All Rooms with Characters ===", ConsoleColor.Yellow);
+
+        // TODO: Implement this method
+        _outputManager.WriteLine("This feature is not yet implemented.", ConsoleColor.Red);
+        _outputManager.WriteLine("TODO: Group and display all characters by their rooms.", ConsoleColor.Yellow);
+
+        _outputManager.Display();
+        Thread.Sleep(2000);
+    }
+
+    // TODO: Implement this method
+    // Requirements:
+    // - Prompt user for equipment/item name to search for
+    // - Query the database to find which character has this equipment
+    // - Use Include to load Equipment -> Weapon/Armor -> Item
+    // - Also load the character's Room information
+    // - Display the character's name who has the equipment
+    // - Display the room/location where the character is located
+    // - Handle case where equipment is not found
+    // - Handle case where equipment exists but isn't equipped by anyone
+    // - Log the operation
+    private void FindEquipmentLocation()
+    {
+        _logger.LogInformation("User selected Find Equipment Location");
+        _outputManager.WriteLine("=== Find Equipment Location ===", ConsoleColor.Yellow);
+
+        // TODO: Implement this method
+        _outputManager.WriteLine("This feature is not yet implemented.", ConsoleColor.Red);
+        _outputManager.WriteLine("TODO: Find which character has specific equipment and where they are located.", ConsoleColor.Yellow);
+
+        _outputManager.Display();
+        Thread.Sleep(2000);
+    }
+
+    #endregion
 }
