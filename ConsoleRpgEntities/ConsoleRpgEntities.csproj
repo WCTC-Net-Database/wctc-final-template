@@ -26,7 +26,6 @@
     <None Remove="Migrations\Scripts\SeedEquipment.sql" />
     <None Remove="Models\Abilities\Ability.cs~RF7a28a58b.TMP" />
     <None Remove="Models\Attributes\ITargetable.cs~RF7fb34c69.TMP" />
-    <None Remove="Models\Equipments\Inventory.cs~RFae3eb4d5.TMP" />
   </ItemGroup>
 
   <ItemGroup>
