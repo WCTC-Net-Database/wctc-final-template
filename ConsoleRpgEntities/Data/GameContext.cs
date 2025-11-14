@@ -2,6 +2,7 @@
 using ConsoleRpgEntities.Models.Characters;
 using ConsoleRpgEntities.Models.Characters.Monsters;
 using ConsoleRpgEntities.Models.Equipments;
+using ConsoleRpgEntities.Models.Rooms;
 using Microsoft.EntityFrameworkCore;
 
 namespace ConsoleRpgEntities.Data
@@ -13,6 +14,7 @@ namespace ConsoleRpgEntities.Data
         public DbSet<Ability> Abilities { get; set; }
         public DbSet<Item> Items { get; set; }
         public DbSet<Equipment> Equipments { get; set; }
+        public DbSet<Room> Rooms { get; set; }
 
         public GameContext(DbContextOptions<GameContext> options) : base(options)
         {
@@ -35,6 +37,19 @@ namespace ConsoleRpgEntities.Data
                 .HasMany(p => p.Abilities)
                 .WithMany(a => a.Players)
                 .UsingEntity(j => j.ToTable("PlayerAbilities"));
+
+            // Configure Room relationships
+            modelBuilder.Entity<Room>()
+                .HasMany(r => r.Players)
+                .WithOne(p => p.Room)
+                .HasForeignKey(p => p.RoomId)
+                .IsRequired(false);
+
+            modelBuilder.Entity<Room>()
+                .HasMany(r => r.Monsters)
+                .WithOne(m => m.Room)
+                .HasForeignKey(m => m.RoomId)
+                .IsRequired(false);
 
             // Call the separate configuration method to set up Equipment entity relationships
             ConfigureEquipmentRelationships(modelBuilder);

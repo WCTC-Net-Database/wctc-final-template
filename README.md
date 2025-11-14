@@ -1,87 +1,167 @@
-### Assignment: *Week 12 – Advanced LINQ & Inventory Management*
+# Final Exam Template - RPG Character Manager
 
-#### Overview
-In this assignment, you'll extend the ConsoleRPG project to implement an **Inventory Management System** for players. This involves using advanced LINQ queries to perform actions on a player’s inventory, including searching, sorting, and filtering items. You’ll practice LINQ skills to manage a collection of items and add functionality for using, equipping, and removing items.
+This is a simplified template for the final exam. The solution provides a basic structure with Entity Framework Core, database migrations, and a console application that demonstrates CRUD operations.
 
-#### Objectives
-By completing this assignment, you will:
-- Gain experience with **advanced LINQ queries** in C#.
-- Implement an **Inventory system** for the player, where they can add, equip, use, and remove items from the inventory.
-- Extend the **ConsoleRPG game mechanics** using Entity Framework and LINQ to interact with the inventory and items database.
+## Project Structure
 
-#### Instructions
+The solution consists of two projects:
 
-1. **Setup Inventory Management:**
-   - **Add Inventory to Player:** 
-     - Create a property `List<Item> Inventory` in the `Player` class to hold a collection of items.
-   - **Add Inventory Methods:**
-     - Implement methods in the `Player` class for adding, using, equipping, and removing items from the inventory.
+### 1. ConsoleRpg (Console Application)
+- **Program.cs**: Entry point that sets up dependency injection
+- **Startup.cs**: Configures services including logging and database context
+- **Services/GameEngine.cs**: Contains example CRUD operations (Add, Edit, Display, Search)
+- **Helpers/MenuManager.cs**: Manages the main menu display
+- **Helpers/OutputManager.cs**: Handles console output with buffering
 
-2. **Add LINQ Queries for Inventory Operations:**
-   - Write LINQ queries to:
-     - **Search for an item by name:** Display any matching items by their name.
-     - **List items by type (e.g., Weapons, Armor):** Group items by type and display them accordingly.
-     - **Sort items:** Provide options to sort items by:
-       - Name
-       - Attack value
-       - Defense value
-     - These should be grouped into a **Sort submenu** in the main menu to allow the player to select a sorting option.
+### 2. ConsoleRpgEntities (Entity Framework Library)
+- **Data/GameContext.cs**: EF Core DbContext with all DbSets
+- **Models/**: Contains all entity models
+  - **Characters/Player.cs**: Player entity
+  - **Characters/Monsters/Monster.cs**: Abstract monster base class
+  - **Characters/Monsters/Goblin.cs**: Concrete monster implementation
+  - **Abilities/PlayerAbilities/Ability.cs**: Abstract ability base class
+  - **Abilities/PlayerAbilities/ShoveAbility.cs**: Concrete ability implementation
+  - **Equipments/Item.cs**: Item/Weapon/Armor entity
+  - **Equipments/Equipment.cs**: Equipment entity linking weapons and armor
+  - **Rooms/Room.cs**: Room entity (new)
+- **Migrations/**: Database migrations
 
-3. **Implement Inventory Actions in GameEngine:**
-   - Add methods in the `GameEngine` class to handle the player’s inventory actions, using LINQ to:
-     - Display the inventory list with sorting and filtering options.
-     - Equip or use items based on their properties (e.g., only equipping items with attack or defense stats).
-   - Update the menu in `MenuManager` to allow players to:
-     - **Search for an item by name**
-     - **List items by type**
-     - **Sort items** (with a submenu for choosing sort criteria)
+## Models Overview
 
-   Here’s a sample menu setup in `MenuManager` for reference:
+### Player
+- Id, Name, Health, Experience
+- Foreign Keys: EquipmentId, RoomId
+- Navigation Properties: Equipment, Room, Abilities, Inventory
 
-   ```csharp
-   Console.WriteLine("\nInventory Management:");
-   Console.WriteLine("1. Search for item by name");
-   Console.WriteLine("2. List items by type");
-   Console.WriteLine("3. Sort items");
-   ```
+### Monster (Abstract)
+- Id, Name, Health, AggressionLevel
+- Foreign Key: RoomId
+- Navigation Property: Room
+- Concrete implementation: Goblin (adds Sneakiness property)
 
-   - Under "3. Sort items," add a **submenu** for sorting criteria:
+### Ability (Abstract)
+- Id, Name, Description
+- Many-to-many relationship with Player
+- Concrete implementation: ShoveAbility (adds Damage, Distance properties)
 
-     ```csharp
-     Console.WriteLine("\nSort Options:");
-     Console.WriteLine("1. Sort by Name");
-     Console.WriteLine("2. Sort by Attack Value");
-     Console.WriteLine("3. Sort by Defense Value");
-     ```
+### Equipment
+- Id, WeaponId, ArmorId
+- Links to Item entities for weapons and armor
 
-4. **Update Database Context:**
-   - Add sample data to the `GameContext` for various items (e.g., weapons, armor, potions).
-   - **Seed Database:** Ensure the database is seeded with a list of items that players can find or use in the game.
+### Item
+- Id, Name, Type, Attack, Defense
 
-#### Stretch Goal (+10%)
-1. **Inventory Weight Limit:**
-   - Implement a weight system in the `Player` class by adding a `MaxWeight` property.
-   - Each item should have a `Weight` property.
-   - Add validation to prevent players from adding items that would exceed their `MaxWeight`.
-2. **Advanced LINQ Queries for Weight Management:**
-   - Use LINQ to calculate the total weight of items in the player’s inventory.
-   - Filter items that can be equipped based on the remaining weight limit.
+### Room (NEW)
+- Id, Name, Description
+- Navigation Properties: Players, Monsters
 
-#### Submission Requirements
-- Submit your modified files:
-  - `Player.cs`, `GameEngine.cs`, `GameContext.cs`, and any relevant files containing LINQ queries and inventory methods.
-- Include a short write-up explaining your changes and how the LINQ queries enhance the inventory management experience.
+## Basic Required Functionality (Already Implemented)
 
-#### Grading Criteria
+The template includes these basic operations as examples:
 
-| **Criteria**                      | **Points** |
-|-----------------------------------|------------|
-| Inventory management methods added in `Player` class | 40         |
-| LINQ queries for search, sort, filter, and count    | 40         |
-| Integration of inventory actions in `GameEngine`    | 30         |
-| Inventory actions in `MenuManager`                  | 15         |
-| Database seeding and context setup                  | 15         |
-| Code readability and comments                       | 10         |
-| **Stretch Goal (optional)**                        | **+10**    |
-| **Total Possible Points**                          | **150 (+10%)** |
+1. **Add a new Character** - Prompts for Name, Health, Experience and saves to database
+2. **Edit an existing Character** - Allows updating attributes
+3. **Display all Characters** - Shows all characters with details
+4. **Search for a Character by name** - Case-insensitive search
+5. **Logging** - All operations are logged using Microsoft.Extensions.Logging
+
+## Final Exam Requirements
+
+### "C" Level (405/500 points)
+**Required:** All basic features above
+
+**Additional Requirements:**
+1. Add Abilities to a Character
+   - Allow users to add Abilities to existing Characters
+   - Prompt for Ability details (Name, Attack Bonus, Defense Bonus, etc.)
+   - Associate the Ability with the Character and save to database
+   - Output confirmation to user
+
+2. Display Character Abilities
+   - For a selected Character, display all their Abilities
+   - Include all ability properties in the output
+
+3. Execute an ability during an attack
+   - When attacking, ensure the ability is executed
+   - Display appropriate output
+
+### "B" Level (445/500 points)
+**Required:** All basic and "C" level features
+
+**Additional Requirements:**
+1. Add new Room
+   - Prompt for Room name, Description, and other properties
+   - Optionally add a character/player to that room
+   - Save Room to database
+   - Output confirmation
+
+2. Display details of a Room
+   - Display all associated properties
+   - Include list of inhabitants in the Room
+   - Handle cases where Room has no Characters gracefully
+
+3. Navigate the Rooms
+   - Allow character to navigate through rooms
+   - Display room details upon entering (name, description, inhabitants, etc.)
+   - **Bonus:** Display a map using Spectre.Console or another tool
+
+### "A" Level (475/500 points)
+**Required:** All basic, "C", and "B" level features
+
+**Additional Requirements (Admin Features):**
+1. List characters in the room by selected attribute
+   - Allow users to find Characters matching criteria (Health, Attack, Name, etc.)
+
+2. List all Rooms with all characters in those rooms
+   - Group Characters by their Room
+   - Display in a formatted list
+
+3. Find a specific piece of equipment and list the associated character and location
+   - Allow user to specify the name of an item
+   - Output: Character holding the item, Location of the character
+
+## Database Configuration
+
+**Connection String:** LocalDB (SQL Server)
+```
+Server=(localdb)\\mssqllocaldb;Database=GameDatabase;Trusted_Connection=True;
+```
+
+**Migrations:**
+- Run migrations to create the database schema
+- Existing migrations include initial setup, equipment, and rooms
+
+## Logging
+
+Logging is configured in `Startup.cs` with:
+- Console logging (for development)
+- File logging (stored in `Logs/log.txt`)
+
+All user interactions are logged automatically.
+
+## Getting Started
+
+1. Ensure you have .NET 6.0 SDK installed
+2. Update the database connection string in `appsettings.json` if needed
+3. Run migrations: `dotnet ef database update --project ConsoleRpgEntities --startup-project ConsoleRpg`
+4. Build the solution: `dotnet build`
+5. Run the application: `dotnet run --project ConsoleRpg`
+
+## Tips for Implementation
+
+- Use LINQ queries for searching and filtering data
+- Follow the existing pattern in GameEngine.cs for new menu options
+- Use the OutputManager for consistent console output
+- Log all user interactions using the injected ILogger
+- Test your database operations thoroughly
+- Handle edge cases (empty results, invalid input, etc.)
+
+## Entity Framework Notes
+
+- **Lazy Loading** is enabled - navigation properties load automatically
+- **Many-to-Many** relationship between Player and Ability uses join table `PlayerAbilities`
+- **Table-Per-Hierarchy (TPH)** is used for Monster and Ability inheritance
+- **Foreign Keys** are nullable to allow flexibility
+
+Good luck with your final exam!
 

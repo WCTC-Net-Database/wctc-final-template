@@ -9,37 +9,23 @@ public class MenuManager
         _outputManager = outputManager;
     }
 
-    public bool ShowMainMenu()
+    public void ShowMainMenu(Action<string> handleChoice)
     {
-        _outputManager.WriteLine("Welcome to the RPG Game!", ConsoleColor.Yellow);
-        _outputManager.WriteLine("1. Start Game", ConsoleColor.Cyan);
-        _outputManager.WriteLine("2. Exit", ConsoleColor.Cyan);
+        _outputManager.Clear();
+        _outputManager.WriteLine("=================================", ConsoleColor.Yellow);
+        _outputManager.WriteLine("    RPG Character Manager", ConsoleColor.Yellow);
+        _outputManager.WriteLine("=================================", ConsoleColor.Yellow);
+        _outputManager.WriteLine("");
+        _outputManager.WriteLine("1. Add New Character", ConsoleColor.Cyan);
+        _outputManager.WriteLine("2. Edit Character", ConsoleColor.Cyan);
+        _outputManager.WriteLine("3. Display All Characters", ConsoleColor.Cyan);
+        _outputManager.WriteLine("4. Search Character by Name", ConsoleColor.Cyan);
+        _outputManager.WriteLine("5. Exit", ConsoleColor.Cyan);
+        _outputManager.WriteLine("");
+        _outputManager.WriteLine("Select an option:", ConsoleColor.White);
         _outputManager.Display();
 
-        return HandleMainMenuInput();
-    }
-
-    private bool HandleMainMenuInput()
-    {
-        while (true)
-        {
-            var input = Console.ReadLine();
-            switch (input)
-            {
-                case "1":
-                    _outputManager.WriteLine("Starting game...", ConsoleColor.Green);
-                    _outputManager.Display();
-                    return true;
-                case "2":
-                    _outputManager.WriteLine("Exiting game...", ConsoleColor.Red);
-                    _outputManager.Display();
-                    Environment.Exit(0);
-                    return false;
-                default:
-                    _outputManager.WriteLine("Invalid selection. Please choose 1 or 2.", ConsoleColor.Red);
-                    _outputManager.Display();
-                    break;
-            }
-        }
+        var input = Console.ReadLine();
+        handleChoice(input);
     }
 }
