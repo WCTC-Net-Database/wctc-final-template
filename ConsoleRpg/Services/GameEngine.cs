@@ -1,7 +1,10 @@
 ﻿using ConsoleRpg.Helpers;
 using ConsoleRpgEntities.Data;
 using ConsoleRpgEntities.Models.Characters;
+using ConsoleRpgEntities.Models.Rooms;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Spectre.Console;
 
 namespace ConsoleRpg.Services;
 
@@ -10,12 +13,14 @@ public class GameEngine
     private readonly GameContext _context;
     private readonly MenuManager _menuManager;
     private readonly OutputManager _outputManager;
+    private readonly MapManager _mapManager;
     private readonly ILogger<GameEngine> _logger;
 
-    public GameEngine(GameContext context, MenuManager menuManager, OutputManager outputManager, ILogger<GameEngine> logger)
+    public GameEngine(GameContext context, MenuManager menuManager, OutputManager outputManager, MapManager mapManager, ILogger<GameEngine> logger)
     {
         _menuManager = menuManager;
         _outputManager = outputManager;
+        _mapManager = mapManager;
         _context = context;
         _logger = logger;
     }
@@ -28,8 +33,13 @@ public class GameEngine
 
     private void MainMenuChoice(string choice)
     {
-        switch (choice)
+        switch (choice?.ToUpper())
         {
+            // World Exploration
+            case "E":
+                ExploreWorld();
+                break;
+
             // Basic Features
             case "1":
                 AddCharacter();
@@ -92,6 +102,279 @@ public class GameEngine
         // Show menu again after action completes
         _menuManager.ShowMainMenu(MainMenuChoice);
     }
+
+    #region World Exploration
+
+    private void ExploreWorld()
+    {
+        _logger.LogInformation("User selected Explore World");
+        Console.Clear();
+
+        // Get or create a player
+        var players = _context.Players.ToList();
+        Player currentPlayer;
+
+        if (!players.Any())
+        {
+            AnsiConsole.MarkupLine("[yellow]No characters found. Let's create one first![/]");
+            AnsiConsole.WriteLine();
+
+            var name = AnsiConsole.Ask<string>("What is your character's [green]name[/]?");
+            var health = AnsiConsole.Ask<int>("What is your character's [green]health[/]?");
+            var experience = AnsiConsole.Ask<int>("What is your character's [green]experience[/]?");
+
+            currentPlayer = new Player
+            {
+                Name = name,
+                Health = health,
+                Experience = experience
+            };
+
+            _context.Players.Add(currentPlayer);
+            _context.SaveChanges();
+
+            AnsiConsole.MarkupLine($"[green]Character '{name}' created successfully![/]");
+            Thread.Sleep(1500);
+        }
+        else if (players.Count == 1)
+        {
+            currentPlayer = players.First();
+        }
+        else
+        {
+            var playerNames = players.Select(p => p.Name).ToList();
+            var selectedName = AnsiConsole.Prompt(
+                new SelectionPrompt<string>()
+                    .Title("Select your [green]character[/]:")
+                    .PageSize(10)
+                    .AddChoices(playerNames));
+
+            currentPlayer = players.First(p => p.Name == selectedName);
+        }
+
+        // Place player in starting room (Town Square) if not already in a room
+        if (currentPlayer.RoomId == null)
+        {
+            var townSquare = _context.Rooms.FirstOrDefault(r => r.Name == "Town Square");
+            if (townSquare != null)
+            {
+                currentPlayer.RoomId = townSquare.Id;
+                _context.SaveChanges();
+            }
+        }
+
+        // Start exploration loop
+        bool exploring = true;
+        while (exploring)
+        {
+            Console.Clear();
+
+            // Load current room with all related data
+            var currentRoom = _context.Rooms
+                .Include(r => r.NorthRoom)
+                .Include(r => r.SouthRoom)
+                .Include(r => r.EastRoom)
+                .Include(r => r.WestRoom)
+                .Include(r => r.Monsters)
+                .Include(r => r.Players)
+                .FirstOrDefault(r => r.Id == currentPlayer.RoomId);
+
+            if (currentRoom == null)
+            {
+                AnsiConsole.MarkupLine("[red]Error: You are not in a valid room. Returning to main menu.[/]");
+                Thread.Sleep(2000);
+                return;
+            }
+
+            // Display map
+            var allRooms = _context.Rooms
+                .Include(r => r.Monsters)
+                .Include(r => r.Players)
+                .Include(r => r.NorthRoom)
+                .Include(r => r.SouthRoom)
+                .Include(r => r.EastRoom)
+                .Include(r => r.WestRoom)
+                .ToList();
+
+            _mapManager.DisplayMap(allRooms, currentRoom);
+
+            // Display current room details
+            _mapManager.DisplayRoomDetails(currentRoom);
+
+            // Get context-aware actions
+            var actions = _mapManager.GetAvailableActions(currentRoom);
+
+            // Prompt user for action
+            var selectedAction = AnsiConsole.Prompt(
+                new SelectionPrompt<string>()
+                    .Title("What would you like to do?")
+                    .PageSize(15)
+                    .AddChoices(actions));
+
+            // Handle the selected action
+            exploring = HandleExplorationAction(selectedAction, currentPlayer, currentRoom);
+        }
+    }
+
+    private bool HandleExplorationAction(string action, Player player, Room currentRoom)
+    {
+        switch (action)
+        {
+            case "Go North":
+                if (currentRoom.NorthRoomId.HasValue)
+                {
+                    player.RoomId = currentRoom.NorthRoomId.Value;
+                    _context.SaveChanges();
+                    _logger.LogInformation("Player {PlayerName} moved North to room {RoomId}", player.Name, player.RoomId);
+                }
+                return true;
+
+            case "Go South":
+                if (currentRoom.SouthRoomId.HasValue)
+                {
+                    player.RoomId = currentRoom.SouthRoomId.Value;
+                    _context.SaveChanges();
+                    _logger.LogInformation("Player {PlayerName} moved South to room {RoomId}", player.Name, player.RoomId);
+                }
+                return true;
+
+            case "Go East":
+                if (currentRoom.EastRoomId.HasValue)
+                {
+                    player.RoomId = currentRoom.EastRoomId.Value;
+                    _context.SaveChanges();
+                    _logger.LogInformation("Player {PlayerName} moved East to room {RoomId}", player.Name, player.RoomId);
+                }
+                return true;
+
+            case "Go West":
+                if (currentRoom.WestRoomId.HasValue)
+                {
+                    player.RoomId = currentRoom.WestRoomId.Value;
+                    _context.SaveChanges();
+                    _logger.LogInformation("Player {PlayerName} moved West to room {RoomId}", player.Name, player.RoomId);
+                }
+                return true;
+
+            case "Attack Monster":
+                HandleCombat(player, currentRoom);
+                return true;
+
+            case "Use Ability":
+                AnsiConsole.MarkupLine("[yellow]Ability system is available for students to implement![/]");
+                AnsiConsole.WriteLine("Press any key to continue...");
+                Console.ReadKey();
+                return true;
+
+            case "View Character Stats":
+                DisplayPlayerStats(player);
+                return true;
+
+            case "View Inventory":
+                AnsiConsole.MarkupLine("[yellow]Inventory system is available for students to implement![/]");
+                AnsiConsole.WriteLine("Press any key to continue...");
+                Console.ReadKey();
+                return true;
+
+            case "View Map":
+                // Map is already displayed, just pause
+                AnsiConsole.WriteLine("Press any key to continue...");
+                Console.ReadKey();
+                return true;
+
+            case "Return to Main Menu":
+                return false;
+
+            default:
+                AnsiConsole.MarkupLine("[red]Invalid action.[/]");
+                Thread.Sleep(1000);
+                return true;
+        }
+    }
+
+    private void HandleCombat(Player player, Room currentRoom)
+    {
+        var monsters = currentRoom.Monsters?.ToList();
+        if (monsters == null || !monsters.Any())
+        {
+            AnsiConsole.MarkupLine("[red]No monsters to attack![/]");
+            Thread.Sleep(1500);
+            return;
+        }
+
+        // Select monster to attack
+        var monsterNames = monsters.Select(m => $"{m.Name} (HP: {m.Health})").ToList();
+        var selectedMonsterName = AnsiConsole.Prompt(
+            new SelectionPrompt<string>()
+                .Title("Select a [red]monster[/] to attack:")
+                .AddChoices(monsterNames));
+
+        var monsterIndex = monsterNames.IndexOf(selectedMonsterName);
+        var monster = monsters[monsterIndex];
+
+        // Simple combat - TODO: Students can enhance this
+        AnsiConsole.MarkupLine($"[green]{player.Name}[/] attacks [red]{monster.Name}[/]!");
+
+        var playerEquipment = _context.Equipments
+            .Include(e => e.Weapon)
+            .FirstOrDefault(e => e.Id == player.EquipmentId);
+
+        int damage = playerEquipment?.Weapon?.Attack ?? 5; // Default 5 damage if no weapon
+        monster.Health -= damage;
+
+        AnsiConsole.MarkupLine($"[yellow]Dealt {damage} damage! {monster.Name} has {monster.Health} HP remaining.[/]");
+
+        if (monster.Health <= 0)
+        {
+            AnsiConsole.MarkupLine($"[green]{monster.Name} has been defeated![/]");
+            _context.Monsters.Remove(monster);
+            player.Experience += 10;
+            AnsiConsole.MarkupLine($"[cyan]You gained 10 experience! Total: {player.Experience}[/]");
+        }
+        else
+        {
+            // Monster attacks back
+            int monsterDamage = monster.AggressionLevel;
+            player.Health -= monsterDamage;
+            AnsiConsole.MarkupLine($"[red]{monster.Name} attacks back for {monsterDamage} damage![/]");
+            AnsiConsole.MarkupLine($"[yellow]You have {player.Health} HP remaining.[/]");
+
+            if (player.Health <= 0)
+            {
+                AnsiConsole.MarkupLine("[red]You have been defeated! Game Over![/]");
+                player.Health = 100; // Respawn with full health
+                AnsiConsole.MarkupLine("[green]You respawn at the Town Square...[/]");
+
+                var townSquare = _context.Rooms.FirstOrDefault(r => r.Name == "Town Square");
+                if (townSquare != null)
+                {
+                    player.RoomId = townSquare.Id;
+                }
+            }
+        }
+
+        _context.SaveChanges();
+        AnsiConsole.WriteLine("\nPress any key to continue...");
+        Console.ReadKey();
+    }
+
+    private void DisplayPlayerStats(Player player)
+    {
+        var panel = new Panel(
+            $"[yellow]Name:[/] {player.Name}\n" +
+            $"[red]Health:[/] {player.Health}\n" +
+            $"[cyan]Experience:[/] {player.Experience}\n" +
+            $"[green]Room:[/] {player.Room?.Name ?? "None"}"
+        );
+        panel.Header = new PanelHeader("[green]Character Stats[/]");
+        panel.Border = BoxBorder.Double;
+
+        AnsiConsole.Write(panel);
+        AnsiConsole.WriteLine("\nPress any key to continue...");
+        Console.ReadKey();
+    }
+
+    #endregion
 
     private void AddCharacter()
     {

@@ -1,0 +1,271 @@
+using ConsoleRpgEntities.Models.Rooms;
+using Spectre.Console;
+
+namespace ConsoleRpg.Helpers
+{
+    public class MapManager
+    {
+        private readonly OutputManager _outputManager;
+
+        public MapManager(OutputManager outputManager)
+        {
+            _outputManager = outputManager;
+        }
+
+        /// <summary>
+        /// Displays a visual map of the world using Spectre.Console
+        /// </summary>
+        public void DisplayMap(IEnumerable<Room> rooms, Room currentRoom)
+        {
+            if (!rooms.Any())
+            {
+                AnsiConsole.MarkupLine("[red]No rooms available to display.[/]");
+                return;
+            }
+
+            // Calculate map boundaries
+            int minX = rooms.Min(r => r.X);
+            int maxX = rooms.Max(r => r.X);
+            int minY = rooms.Min(r => r.Y);
+            int maxY = rooms.Max(r => r.Y);
+
+            // Create a grid for the map
+            var grid = new Grid();
+            grid.AddColumn();
+
+            // Add title
+            var title = new Rule("[yellow]World Map[/]");
+            title.Centered();
+            AnsiConsole.Write(title);
+            AnsiConsole.WriteLine();
+
+            // Create the map from top to bottom (Y descends from max to min)
+            var mapLines = new List<string>();
+
+            for (int y = maxY; y >= minY; y--)
+            {
+                var line = new System.Text.StringBuilder();
+
+                for (int x = minX; x <= maxX; x++)
+                {
+                    var room = rooms.FirstOrDefault(r => r.X == x && r.Y == y);
+
+                    if (room != null)
+                    {
+                        // Current room is highlighted
+                        if (room.Id == currentRoom?.Id)
+                        {
+                            line.Append("[green on white][@][/]");
+                        }
+                        // Room with monsters
+                        else if (room.Monsters?.Any() == true)
+                        {
+                            line.Append("[red][M][/]");
+                        }
+                        // Room with players
+                        else if (room.Players?.Any() == true)
+                        {
+                            line.Append("[cyan][P][/]");
+                        }
+                        // Empty room
+                        else
+                        {
+                            line.Append("[blue][■][/]");
+                        }
+
+                        // Add connections
+                        if (room.EastRoom != null && x < maxX)
+                        {
+                            line.Append("[dim]═[/]");
+                        }
+                        else if (x < maxX)
+                        {
+                            line.Append(" ");
+                        }
+                    }
+                    else
+                    {
+                        line.Append("   ");
+                        if (x < maxX)
+                        {
+                            line.Append(" ");
+                        }
+                    }
+                }
+
+                mapLines.Add(line.ToString());
+
+                // Add vertical connections if not the last row
+                if (y > minY)
+                {
+                    var verticalLine = new System.Text.StringBuilder();
+                    for (int x = minX; x <= maxX; x++)
+                    {
+                        var room = rooms.FirstOrDefault(r => r.X == x && r.Y == y);
+
+                        if (room != null && room.SouthRoom != null)
+                        {
+                            verticalLine.Append("[dim] ║ [/]");
+                        }
+                        else
+                        {
+                            verticalLine.Append("   ");
+                        }
+
+                        if (x < maxX)
+                        {
+                            verticalLine.Append(" ");
+                        }
+                    }
+                    mapLines.Add(verticalLine.ToString());
+                }
+            }
+
+            // Display the map
+            foreach (var line in mapLines)
+            {
+                AnsiConsole.MarkupLine(line);
+            }
+
+            AnsiConsole.WriteLine();
+
+            // Legend
+            var legend = new Panel(
+                "[green on white][@][/] = Current Location\n" +
+                "[blue][■][/] = Empty Room\n" +
+                "[red][M][/] = Monster Present\n" +
+                "[cyan][P][/] = Player Present"
+            );
+            legend.Header = new PanelHeader("[yellow]Legend[/]");
+            legend.Border = BoxBorder.Rounded;
+            AnsiConsole.Write(legend);
+            AnsiConsole.WriteLine();
+        }
+
+        /// <summary>
+        /// Displays detailed information about the current room
+        /// </summary>
+        public void DisplayRoomDetails(Room room)
+        {
+            if (room == null)
+            {
+                AnsiConsole.MarkupLine("[red]No room information available.[/]");
+                return;
+            }
+
+            // Room name and description
+            var panel = new Panel(new Markup($"[bold]{room.Description}[/]"));
+            panel.Header = new PanelHeader($"[yellow]{room.Name}[/]");
+            panel.Border = BoxBorder.Double;
+            AnsiConsole.Write(panel);
+            AnsiConsole.WriteLine();
+
+            // Display available exits
+            var exits = new List<string>();
+            if (room.NorthRoom != null) exits.Add($"[cyan]North[/] → {room.NorthRoom.Name}");
+            if (room.SouthRoom != null) exits.Add($"[cyan]South[/] → {room.SouthRoom.Name}");
+            if (room.EastRoom != null) exits.Add($"[cyan]East[/] → {room.EastRoom.Name}");
+            if (room.WestRoom != null) exits.Add($"[cyan]West[/] → {room.WestRoom.Name}");
+
+            if (exits.Any())
+            {
+                var exitsPanel = new Panel(string.Join("\n", exits));
+                exitsPanel.Header = new PanelHeader("[green]Available Exits[/]");
+                exitsPanel.Border = BoxBorder.Rounded;
+                AnsiConsole.Write(exitsPanel);
+                AnsiConsole.WriteLine();
+            }
+            else
+            {
+                AnsiConsole.MarkupLine("[dim]No exits available from this room.[/]");
+                AnsiConsole.WriteLine();
+            }
+
+            // Display monsters in the room
+            if (room.Monsters?.Any() == true)
+            {
+                var monstersTable = new Table();
+                monstersTable.Border = TableBorder.Rounded;
+                monstersTable.Title = new TableTitle("[red]Monsters in this room[/]");
+                monstersTable.AddColumn("[yellow]Name[/]");
+                monstersTable.AddColumn("[yellow]Type[/]");
+                monstersTable.AddColumn("[yellow]Health[/]");
+                monstersTable.AddColumn("[yellow]Aggression[/]");
+
+                foreach (var monster in room.Monsters)
+                {
+                    monstersTable.AddRow(
+                        monster.Name,
+                        monster.MonsterType,
+                        monster.Health.ToString(),
+                        monster.AggressionLevel.ToString()
+                    );
+                }
+
+                AnsiConsole.Write(monstersTable);
+                AnsiConsole.WriteLine();
+            }
+            else
+            {
+                AnsiConsole.MarkupLine("[green]No monsters in this room.[/]");
+                AnsiConsole.WriteLine();
+            }
+
+            // Display other players in the room
+            if (room.Players?.Any(p => p != null) == true)
+            {
+                var playersTable = new Table();
+                playersTable.Border = TableBorder.Rounded;
+                playersTable.Title = new TableTitle("[cyan]Other Players in this room[/]");
+                playersTable.AddColumn("[yellow]Name[/]");
+                playersTable.AddColumn("[yellow]Health[/]");
+                playersTable.AddColumn("[yellow]Experience[/]");
+
+                foreach (var player in room.Players)
+                {
+                    playersTable.AddRow(
+                        player.Name,
+                        player.Health.ToString(),
+                        player.Experience.ToString()
+                    );
+                }
+
+                AnsiConsole.Write(playersTable);
+                AnsiConsole.WriteLine();
+            }
+        }
+
+        /// <summary>
+        /// Gets available actions based on the current room context
+        /// </summary>
+        public List<string> GetAvailableActions(Room currentRoom)
+        {
+            var actions = new List<string>();
+
+            // Navigation actions
+            if (currentRoom?.NorthRoom != null)
+                actions.Add("Go North");
+            if (currentRoom?.SouthRoom != null)
+                actions.Add("Go South");
+            if (currentRoom?.EastRoom != null)
+                actions.Add("Go East");
+            if (currentRoom?.WestRoom != null)
+                actions.Add("Go West");
+
+            // Combat actions (only if monsters present)
+            if (currentRoom?.Monsters?.Any() == true)
+            {
+                actions.Add("Attack Monster");
+                actions.Add("Use Ability");
+            }
+
+            // General actions
+            actions.Add("View Character Stats");
+            actions.Add("View Inventory");
+            actions.Add("View Map");
+            actions.Add("Return to Main Menu");
+
+            return actions;
+        }
+    }
+}

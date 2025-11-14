@@ -16,6 +16,9 @@ public class MenuManager
         _outputManager.WriteLine("    RPG Character Manager", ConsoleColor.Yellow);
         _outputManager.WriteLine("=================================", ConsoleColor.Yellow);
         _outputManager.WriteLine("");
+        _outputManager.WriteLine("WORLD EXPLORATION:", ConsoleColor.Magenta);
+        _outputManager.WriteLine("E. Explore World (Start Adventure!)", ConsoleColor.Yellow);
+        _outputManager.WriteLine("");
         _outputManager.WriteLine("BASIC FEATURES:", ConsoleColor.Green);
         _outputManager.WriteLine("1. Add New Character", ConsoleColor.Cyan);
         _outputManager.WriteLine("2. Edit Character", ConsoleColor.Cyan);
