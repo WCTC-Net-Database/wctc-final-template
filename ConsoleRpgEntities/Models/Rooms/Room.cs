@@ -9,19 +9,23 @@ namespace ConsoleRpgEntities.Models.Rooms
         public string Name { get; set; }
         public string Description { get; set; }
 
-        // Directional navigation foreign keys (nullable - not all rooms connect in all directions)
+        // Coordinates for map display
+        public int X { get; set; }
+        public int Y { get; set; }
+
+        // Exit foreign keys (nullable - rooms may not have all exits)
         public int? NorthRoomId { get; set; }
         public int? SouthRoomId { get; set; }
         public int? EastRoomId { get; set; }
         public int? WestRoomId { get; set; }
 
-        // Navigation properties for exits (self-referencing relationships)
+        // Navigation properties for exits
         public virtual Room NorthRoom { get; set; }
         public virtual Room SouthRoom { get; set; }
         public virtual Room EastRoom { get; set; }
         public virtual Room WestRoom { get; set; }
 
-        // Navigation properties for inhabitants
+        // Collections of entities in the room
         public virtual ICollection<Player> Players { get; set; }
         public virtual ICollection<Monster> Monsters { get; set; }
     }

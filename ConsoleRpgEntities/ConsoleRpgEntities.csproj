@@ -16,6 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="Migrations\20251115005110_SeedRooms.cs~RF12303f63.TMP" />
     <None Remove="Migrations\Scripts\InitialSeedData.rollback.sql" />
     <None Remove="Migrations\Scripts\InitialSeedData.sql" />
     <None Remove="Migrations\Scripts\SeedEquipment.rollback.sql" />
@@ -72,6 +73,18 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Migrations\Scripts\SeedItems.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Migrations\Scripts\SeedRooms.rollback.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Migrations\Scripts\SeedRooms.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Migrations\Scripts\SeedWorldContent.rollback.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Migrations\Scripts\SeedWorldContent.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

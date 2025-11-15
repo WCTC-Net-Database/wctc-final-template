@@ -38,17 +38,49 @@ namespace ConsoleRpgEntities.Data
                 .WithMany(a => a.Players)
                 .UsingEntity(j => j.ToTable("PlayerAbilities"));
 
-            // Configure Room relationships
+            // Configure Room relationships with Players and Monsters
             modelBuilder.Entity<Room>()
                 .HasMany(r => r.Players)
                 .WithOne(p => p.Room)
                 .HasForeignKey(p => p.RoomId)
+                .OnDelete(DeleteBehavior.Restrict)
                 .IsRequired(false);
 
             modelBuilder.Entity<Room>()
                 .HasMany(r => r.Monsters)
                 .WithOne(m => m.Room)
                 .HasForeignKey(m => m.RoomId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
+
+            // Configure Room self-referencing relationships for exits
+            // These relationships allow rooms to connect to other rooms via North/South/East/West
+            modelBuilder.Entity<Room>()
+                .HasOne(r => r.NorthRoom)
+                .WithMany()
+                .HasForeignKey(r => r.NorthRoomId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
+
+            modelBuilder.Entity<Room>()
+                .HasOne(r => r.SouthRoom)
+                .WithMany()
+                .HasForeignKey(r => r.SouthRoomId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
+
+            modelBuilder.Entity<Room>()
+                .HasOne(r => r.EastRoom)
+                .WithMany()
+                .HasForeignKey(r => r.EastRoomId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
+
+            modelBuilder.Entity<Room>()
+                .HasOne(r => r.WestRoom)
+                .WithMany()
+                .HasForeignKey(r => r.WestRoomId)
+                .OnDelete(DeleteBehavior.Restrict)
                 .IsRequired(false);
 
             // Configure self-referencing Room navigation (directional exits)

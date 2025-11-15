@@ -1,42 +1,99 @@
--- Seed initial rooms for the game world
--- This creates a simple 3x3 grid of rooms that students can expand
+-- Seed initial rooms for the RPG world
+-- This creates a small starting world that students can expand upon
 
--- First, insert rooms without navigation (we'll update navigation in a second pass)
-INSERT INTO Rooms (Name, Description, NorthRoomId, SouthRoomId, EastRoomId, WestRoomId) VALUES
-('Town Square', 'A bustling town square with a fountain in the center. Merchants sell their wares and townsfolk go about their business.', NULL, NULL, NULL, NULL),
-('Dark Forest', 'A dense forest where sunlight barely penetrates the canopy. Strange sounds echo through the trees.', NULL, NULL, NULL, NULL),
-('Ancient Temple', 'An old temple with crumbling stone pillars. Mysterious symbols are carved into the walls.', NULL, NULL, NULL, NULL),
-('Mountain Path', 'A narrow path winding up the mountainside. The air grows thin and cold.', NULL, NULL, NULL, NULL),
-('Crystal Cave', 'A sparkling cave filled with luminescent crystals that cast an eerie blue glow.', NULL, NULL, NULL, NULL),
-('Abandoned Mine', 'An old mine shaft with rusty rails and broken carts. It smells of damp earth and decay.', NULL, NULL, NULL, NULL),
-('Riverside Camp', 'A peaceful camp by the river. The sound of flowing water is soothing.', NULL, NULL, NULL, NULL),
-('Goblin Lair', 'A foul-smelling cave filled with bones and refuse. Goblins have made this their home.', NULL, NULL, NULL, NULL),
-('Wizard Tower', 'A tall tower that pierces the clouds. Magical energy crackles in the air.', NULL, NULL, NULL, NULL);
+-- Room 1: Town Square (Center of the world)
+INSERT INTO Rooms (Name, Description, X, Y, NorthRoomId, SouthRoomId, EastRoomId, WestRoomId)
+VALUES ('Town Square', 'A bustling town square filled with merchants and travelers. Stone fountains decorate the corners, and a large notice board stands in the center.', 0, 0, NULL, NULL, NULL, NULL);
 
--- Now update the navigation links to create a 3x3 grid
--- Layout:
--- [1] Town Square    [2] Dark Forest     [3] Ancient Temple
--- [4] Mountain Path  [5] Crystal Cave    [6] Abandoned Mine
--- [7] Riverside Camp [8] Goblin Lair     [9] Wizard Tower
+DECLARE @TownSquareId INT = SCOPE_IDENTITY();
 
--- Row 1: Town Square, Dark Forest, Ancient Temple
-UPDATE Rooms SET EastRoomId = 2, SouthRoomId = 4 WHERE Id = 1;  -- Town Square
-UPDATE Rooms SET WestRoomId = 1, EastRoomId = 3, SouthRoomId = 5 WHERE Id = 2;  -- Dark Forest
-UPDATE Rooms SET WestRoomId = 2, SouthRoomId = 6 WHERE Id = 3;  -- Ancient Temple
+-- Room 2: Northern Gate
+INSERT INTO Rooms (Name, Description, X, Y, NorthRoomId, SouthRoomId, EastRoomId, WestRoomId)
+VALUES ('Northern Gate', 'A massive wooden gate reinforced with iron bars guards the northern entrance to the town. Guards patrol the ramparts above.', 0, 1, NULL, @TownSquareId, NULL, NULL);
 
--- Row 2: Mountain Path, Crystal Cave, Abandoned Mine
-UPDATE Rooms SET NorthRoomId = 1, EastRoomId = 5, SouthRoomId = 7 WHERE Id = 4;  -- Mountain Path
-UPDATE Rooms SET NorthRoomId = 2, WestRoomId = 4, EastRoomId = 6, SouthRoomId = 8 WHERE Id = 5;  -- Crystal Cave
-UPDATE Rooms SET NorthRoomId = 3, WestRoomId = 5, SouthRoomId = 9 WHERE Id = 6;  -- Abandoned Mine
+DECLARE @NorthernGateId INT = SCOPE_IDENTITY();
 
--- Row 3: Riverside Camp, Goblin Lair, Wizard Tower
-UPDATE Rooms SET NorthRoomId = 4, EastRoomId = 8 WHERE Id = 7;  -- Riverside Camp
-UPDATE Rooms SET NorthRoomId = 5, WestRoomId = 7, EastRoomId = 9 WHERE Id = 8;  -- Goblin Lair
-UPDATE Rooms SET NorthRoomId = 6, WestRoomId = 8 WHERE Id = 9;  -- Wizard Tower
+-- Room 3: Eastern Market
+INSERT INTO Rooms (Name, Description, X, Y, NorthRoomId, SouthRoomId, EastRoomId, WestRoomId)
+VALUES ('Eastern Market', 'Colorful stalls line the streets, selling exotic goods from distant lands. The smell of spices and fresh bread fills the air.', 1, 0, NULL, NULL, NULL, @TownSquareId);
 
--- Place some monsters in rooms
-UPDATE Monsters SET RoomId = 2 WHERE Id = 1;  -- Place first goblin in Dark Forest
-UPDATE Monsters SET RoomId = 8 WHERE Id = 2;  -- Place second goblin in Goblin Lair (if exists)
+DECLARE @EasternMarketId INT = SCOPE_IDENTITY();
 
--- Place the first player in Town Square
-UPDATE Players SET RoomId = 1 WHERE Id = 1;  -- Place first player in Town Square
+-- Room 4: Western Tavern
+INSERT INTO Rooms (Name, Description, X, Y, NorthRoomId, SouthRoomId, EastRoomId, WestRoomId)
+VALUES ('The Prancing Pony Tavern', 'A warm and welcoming tavern with a roaring fireplace. Adventurers share tales of their exploits over mugs of ale.', -1, 0, NULL, NULL, @TownSquareId, NULL);
+
+DECLARE @WesternTavernId INT = SCOPE_IDENTITY();
+
+-- Room 5: Southern Forest Edge
+INSERT INTO Rooms (Name, Description, X, Y, NorthRoomId, SouthRoomId, EastRoomId, WestRoomId)
+VALUES ('Forest Edge', 'The dense Darkwood Forest begins here. Ancient trees loom overhead, their branches creating an ominous canopy.', 0, -1, @TownSquareId, NULL, NULL, NULL);
+
+DECLARE @ForestEdgeId INT = SCOPE_IDENTITY();
+
+-- Room 6: Deep Forest (dangerous area with potential monsters)
+INSERT INTO Rooms (Name, Description, X, Y, NorthRoomId, SouthRoomId, EastRoomId, WestRoomId)
+VALUES ('Deep Darkwood', 'The heart of the forest is dark and foreboding. Strange sounds echo through the trees, and you feel like you are being watched.', 0, -2, @ForestEdgeId, NULL, NULL, NULL);
+
+DECLARE @DeepForestId INT = SCOPE_IDENTITY();
+
+-- Room 7: Training Grounds
+INSERT INTO Rooms (Name, Description, X, Y, NorthRoomId, SouthRoomId, EastRoomId, WestRoomId)
+VALUES ('Training Grounds', 'An open field where warriors practice their combat skills. Training dummies and weapon racks are scattered about.', 1, 1, NULL, NULL, NULL, NULL);
+
+DECLARE @TrainingGroundsId INT = SCOPE_IDENTITY();
+
+-- Room 8: Old Library
+INSERT INTO Rooms (Name, Description, X, Y, NorthRoomId, SouthRoomId, EastRoomId, WestRoomId)
+VALUES ('Ancient Library', 'Towering bookshelves filled with dusty tomes and ancient scrolls. A musty smell permeates the air.', -1, 1, NULL, NULL, NULL, NULL);
+
+DECLARE @LibraryId INT = SCOPE_IDENTITY();
+
+-- Now update the Town Square with exits to all adjacent rooms
+UPDATE Rooms
+SET NorthRoomId = @NorthernGateId,
+    SouthRoomId = @ForestEdgeId,
+    EastRoomId = @EasternMarketId,
+    WestRoomId = @WesternTavernId
+WHERE Id = @TownSquareId;
+
+-- Update Northern Gate with connection to Training Grounds (East)
+UPDATE Rooms
+SET EastRoomId = @TrainingGroundsId,
+    WestRoomId = @LibraryId
+WHERE Id = @NorthernGateId;
+
+-- Update Training Grounds with connection to Northern Gate (West)
+UPDATE Rooms
+SET WestRoomId = @NorthernGateId,
+    SouthRoomId = @EasternMarketId
+WHERE Id = @TrainingGroundsId;
+
+-- Update Library with connection to Northern Gate (East)
+UPDATE Rooms
+SET EastRoomId = @NorthernGateId,
+    SouthRoomId = @WesternTavernId
+WHERE Id = @LibraryId;
+
+-- Update Eastern Market with connection to Training Grounds (North)
+UPDATE Rooms
+SET NorthRoomId = @TrainingGroundsId
+WHERE Id = @EasternMarketId;
+
+-- Update Western Tavern with connection to Library (North)
+UPDATE Rooms
+SET NorthRoomId = @LibraryId
+WHERE Id = @WesternTavernId;
+
+-- Update Forest Edge with connection to Deep Forest (South)
+UPDATE Rooms
+SET SouthRoomId = @DeepForestId
+WHERE Id = @ForestEdgeId;
+
+-- Place a Goblin in the Deep Darkwood (if any exist)
+IF EXISTS (SELECT 1 FROM Monsters WHERE MonsterType = 'Goblin')
+BEGIN
+    UPDATE TOP(1) Monsters
+    SET RoomId = @DeepForestId
+    WHERE MonsterType = 'Goblin' AND RoomId IS NULL;
+END
