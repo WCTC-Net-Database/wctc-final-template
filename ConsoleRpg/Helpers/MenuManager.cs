@@ -13,7 +13,7 @@ public class MenuManager
     {
         _outputManager.Clear();
         _outputManager.WriteLine("=================================", ConsoleColor.Yellow);
-        _outputManager.WriteLine("    RPG Character Manager", ConsoleColor.Yellow);
+        _outputManager.WriteLine("      ADMIN / DEVELOPER MENU", ConsoleColor.Yellow);
         _outputManager.WriteLine("=================================", ConsoleColor.Yellow);
         _outputManager.WriteLine("");
         _outputManager.WriteLine("WORLD EXPLORATION:", ConsoleColor.Magenta);
@@ -28,19 +28,19 @@ public class MenuManager
         _outputManager.WriteLine("'C' LEVEL FEATURES:", ConsoleColor.Green);
         _outputManager.WriteLine("5. Add Ability to Character", ConsoleColor.Cyan);
         _outputManager.WriteLine("6. Display Character Abilities", ConsoleColor.Cyan);
-        _outputManager.WriteLine("7. Attack with Ability", ConsoleColor.Cyan);
+        _outputManager.WriteLine("7. Attack with Ability (use Exploration Mode)", ConsoleColor.DarkGray);
         _outputManager.WriteLine("");
         _outputManager.WriteLine("'B' LEVEL FEATURES:", ConsoleColor.Green);
         _outputManager.WriteLine("8. Add New Room", ConsoleColor.Cyan);
         _outputManager.WriteLine("9. Display Room Details", ConsoleColor.Cyan);
-        _outputManager.WriteLine("10. Navigate Rooms", ConsoleColor.Cyan);
+        _outputManager.WriteLine("10. Navigate Rooms (use Exploration Mode)", ConsoleColor.DarkGray);
         _outputManager.WriteLine("");
         _outputManager.WriteLine("'A' LEVEL FEATURES:", ConsoleColor.Green);
         _outputManager.WriteLine("11. List Characters in Room by Attribute", ConsoleColor.Cyan);
         _outputManager.WriteLine("12. List All Rooms with Characters", ConsoleColor.Cyan);
         _outputManager.WriteLine("13. Find Equipment Location", ConsoleColor.Cyan);
         _outputManager.WriteLine("");
-        _outputManager.WriteLine("0. Exit", ConsoleColor.Red);
+        _outputManager.WriteLine("0. Return to Exploration Mode", ConsoleColor.Green);
         _outputManager.WriteLine("");
         _outputManager.WriteLine("Select an option:", ConsoleColor.White);
         _outputManager.Display();

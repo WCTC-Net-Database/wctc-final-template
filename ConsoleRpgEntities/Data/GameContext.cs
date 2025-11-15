@@ -83,6 +83,36 @@ namespace ConsoleRpgEntities.Data
                 .OnDelete(DeleteBehavior.Restrict)
                 .IsRequired(false);
 
+            // Configure self-referencing Room navigation (directional exits)
+            // These need to be configured to prevent cascade delete issues
+            modelBuilder.Entity<Room>()
+                .HasOne(r => r.NorthRoom)
+                .WithMany()
+                .HasForeignKey(r => r.NorthRoomId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
+
+            modelBuilder.Entity<Room>()
+                .HasOne(r => r.SouthRoom)
+                .WithMany()
+                .HasForeignKey(r => r.SouthRoomId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
+
+            modelBuilder.Entity<Room>()
+                .HasOne(r => r.EastRoom)
+                .WithMany()
+                .HasForeignKey(r => r.EastRoomId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
+
+            modelBuilder.Entity<Room>()
+                .HasOne(r => r.WestRoom)
+                .WithMany()
+                .HasForeignKey(r => r.WestRoomId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
+
             // Call the separate configuration method to set up Equipment entity relationships
             ConfigureEquipmentRelationships(modelBuilder);
 
