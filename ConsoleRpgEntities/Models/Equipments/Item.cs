@@ -12,7 +12,7 @@ public class Item
     public int Attack { get; set; }
     public int Defense { get; set; }
 
-    [Column(TypeName = "decimal(3, 2)")]
+    [Column(TypeName = "decimal(5, 2)")]
     public decimal Weight { get; set; }
 
     public int Value { get; set; }

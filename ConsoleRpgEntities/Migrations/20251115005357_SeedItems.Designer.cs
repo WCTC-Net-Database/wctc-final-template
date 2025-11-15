@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ConsoleRpgEntities.Migrations
 {
     [DbContext(typeof(GameContext))]
-    [Migration("20251115004122_AddRoomTable")]
-    partial class AddRoomTable
+    [Migration("20251115005357_SeedItems")]
+    partial class SeedItems
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {

@@ -1,10 +1,10 @@
-using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace ConsoleRpgEntities.Migrations
 {
-    public partial class SeedRooms : BaseMigration
+    public partial class SeedItems : BaseMigration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
