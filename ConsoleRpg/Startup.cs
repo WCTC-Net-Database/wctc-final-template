@@ -49,5 +49,6 @@ public static class Startup
         services.AddTransient<GameEngine>();
         services.AddTransient<MenuManager>();
         services.AddSingleton<OutputManager>();
+        services.AddSingleton<MapManager>();
     }
 }

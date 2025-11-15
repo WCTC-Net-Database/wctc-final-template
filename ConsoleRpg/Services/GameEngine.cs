@@ -1,7 +1,10 @@
-﻿using ConsoleRpg.Helpers;
+using ConsoleRpg.Helpers;
 using ConsoleRpgEntities.Data;
 using ConsoleRpgEntities.Models.Characters;
+using ConsoleRpgEntities.Models.Rooms;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Spectre.Console;
 
 namespace ConsoleRpg.Services;
 
@@ -9,13 +12,17 @@ public class GameEngine
 {
     private readonly GameContext _context;
     private readonly MenuManager _menuManager;
-    private readonly OutputManager _outputManager;
+    private readonly MapManager _mapManager;
     private readonly ILogger<GameEngine> _logger;
 
-    public GameEngine(GameContext context, MenuManager menuManager, OutputManager outputManager, ILogger<GameEngine> logger)
+    private Player _currentPlayer;
+    private Room _currentRoom;
+    private GameMode _currentMode = GameMode.Exploration;
+
+    public GameEngine(GameContext context, MenuManager menuManager, MapManager mapManager, ILogger<GameEngine> logger)
     {
         _menuManager = menuManager;
-        _outputManager = outputManager;
+        _mapManager = mapManager;
         _context = context;
         _logger = logger;
     }
@@ -23,10 +30,231 @@ public class GameEngine
     public void Run()
     {
         _logger.LogInformation("Game engine started");
-        _menuManager.ShowMainMenu(MainMenuChoice);
+
+        // Initialize game - get or create first player
+        InitializeGame();
+
+        // Main game loop
+        while (true)
+        {
+            if (_currentMode == GameMode.Exploration)
+            {
+                ExplorationMode();
+            }
+            else
+            {
+                AdminMode();
+            }
+        }
     }
 
-    private void MainMenuChoice(string choice)
+    /// <summary>
+    /// Initialize the game by getting the first player or creating one
+    /// </summary>
+    private void InitializeGame()
+    {
+        // Try to get the first player
+        _currentPlayer = _context.Players
+            .Include(p => p.Room)
+            .Include(p => p.Equipment)
+            .Include(p => p.Abilities)
+            .FirstOrDefault();
+
+        if (_currentPlayer == null)
+        {
+            AnsiConsole.MarkupLine("[yellow]No players found! Please create a character first.[/]");
+            _currentMode = GameMode.Admin;
+            return;
+        }
+
+        // Get current room or default to first room
+        _currentRoom = _currentPlayer.Room ?? _context.Rooms.Include(r => r.Players).Include(r => r.Monsters).FirstOrDefault();
+
+        if (_currentRoom == null)
+        {
+            AnsiConsole.MarkupLine("[red]No rooms found! Database may not be properly seeded.[/]");
+            _currentMode = GameMode.Admin;
+            return;
+        }
+
+        _logger.LogInformation("Game initialized with player {PlayerName} in room {RoomName}",
+            _currentPlayer.Name, _currentRoom.Name);
+    }
+
+    #region Exploration Mode
+
+    /// <summary>
+    /// Main exploration mode - this is where the player navigates the world
+    /// </summary>
+    private void ExplorationMode()
+    {
+        AnsiConsole.Clear();
+
+        // Reload room with all related data
+        _currentRoom = _context.Rooms
+            .Include(r => r.Players)
+            .Include(r => r.Monsters)
+            .Include(r => r.NorthRoom)
+            .Include(r => r.SouthRoom)
+            .Include(r => r.EastRoom)
+            .Include(r => r.WestRoom)
+            .FirstOrDefault(r => r.Id == _currentRoom.Id);
+
+        // Display the world map
+        var allRooms = _context.Rooms.ToList();
+        _mapManager.DisplayMap(allRooms, _currentRoom);
+
+        AnsiConsole.WriteLine();
+
+        // Display current room details
+        _mapManager.DisplayRoomDetails(_currentRoom);
+
+        // Display available actions based on room state
+        bool hasMonsters = _currentRoom.Monsters != null && _currentRoom.Monsters.Any();
+        _mapManager.DisplayAvailableActions(_currentRoom, hasMonsters);
+
+        // Get player input
+        AnsiConsole.Markup("[white]What would you like to do? [/]");
+        var input = Console.ReadLine()?.Trim().ToUpper();
+
+        HandleExplorationInput(input, hasMonsters);
+    }
+
+    /// <summary>
+    /// Handles player input during exploration mode
+    /// </summary>
+    private void HandleExplorationInput(string input, bool hasMonsters)
+    {
+        switch (input)
+        {
+            case "N":
+                MoveToRoom(_currentRoom.NorthRoomId, "North");
+                break;
+            case "S":
+                MoveToRoom(_currentRoom.SouthRoomId, "South");
+                break;
+            case "E":
+                MoveToRoom(_currentRoom.EastRoomId, "East");
+                break;
+            case "W":
+                MoveToRoom(_currentRoom.WestRoomId, "West");
+                break;
+            case "M":
+                // Already showing map, just refresh
+                break;
+            case "I":
+                ShowInventory();
+                break;
+            case "A":
+                if (hasMonsters) AttackMonster();
+                else AnsiConsole.MarkupLine("[red]There are no monsters here to attack![/]");
+                PressAnyKey();
+                break;
+            case "B":
+                if (hasMonsters) UseAbilityOnMonster();
+                else AnsiConsole.MarkupLine("[red]There are no targets for your abilities![/]");
+                PressAnyKey();
+                break;
+            case "X":
+                _currentMode = GameMode.Admin;
+                break;
+            case "Q":
+                _logger.LogInformation("User quit the game");
+                Environment.Exit(0);
+                break;
+            default:
+                AnsiConsole.MarkupLine("[red]Invalid choice. Please try again.[/]");
+                PressAnyKey();
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Move the player to a different room
+    /// </summary>
+    private void MoveToRoom(int? roomId, string direction)
+    {
+        if (!roomId.HasValue)
+        {
+            AnsiConsole.MarkupLine($"[red]You cannot go {direction} from here![/]");
+            PressAnyKey();
+            return;
+        }
+
+        _currentRoom = _context.Rooms
+            .Include(r => r.Players)
+            .Include(r => r.Monsters)
+            .Include(r => r.NorthRoom)
+            .Include(r => r.SouthRoom)
+            .Include(r => r.EastRoom)
+            .Include(r => r.WestRoom)
+            .FirstOrDefault(r => r.Id == roomId.Value);
+
+        // Update player's room
+        _currentPlayer.RoomId = roomId.Value;
+        _context.SaveChanges();
+
+        _logger.LogInformation("Player {PlayerName} moved {Direction} to {RoomName}",
+            _currentPlayer.Name, direction, _currentRoom.Name);
+
+        AnsiConsole.MarkupLine($"[green]You travel {direction} to {_currentRoom.Name}[/]");
+        Thread.Sleep(1500);
+    }
+
+    /// <summary>
+    /// Show player inventory and stats
+    /// </summary>
+    private void ShowInventory()
+    {
+        AnsiConsole.Clear();
+
+        var panel = new Panel($@"
+[yellow]Name:[/] {_currentPlayer.Name}
+[green]Health:[/] {_currentPlayer.Health}
+[cyan]Experience:[/] {_currentPlayer.Experience}
+[magenta]Equipment:[/] {(_currentPlayer.Equipment != null ? "Equipped" : "None")}
+[blue]Abilities:[/] {_currentPlayer.Abilities?.Count ?? 0}
+")
+        {
+            Header = new PanelHeader(" [yellow]Character Stats[/] "),
+            Border = BoxBorder.Rounded
+        };
+
+        AnsiConsole.Write(panel);
+        PressAnyKey();
+    }
+
+    /// <summary>
+    /// TODO: Implement monster attack logic
+    /// </summary>
+    private void AttackMonster()
+    {
+        AnsiConsole.MarkupLine("[yellow]TODO: Implement attack logic[/]");
+        // Students will implement this
+    }
+
+    /// <summary>
+    /// TODO: Implement ability usage logic
+    /// </summary>
+    private void UseAbilityOnMonster()
+    {
+        AnsiConsole.MarkupLine("[yellow]TODO: Implement ability usage[/]");
+        // Students will implement this
+    }
+
+    #endregion
+
+    #region Admin Mode
+
+    /// <summary>
+    /// Admin mode - provides access to CRUD operations and template methods
+    /// </summary>
+    private void AdminMode()
+    {
+        _menuManager.ShowMainMenu(AdminMenuChoice);
+    }
+
+    private void AdminMenuChoice(string choice)
     {
         switch (choice)
         {
@@ -52,7 +280,9 @@ public class GameEngine
                 DisplayCharacterAbilities();
                 break;
             case "7":
-                AttackWithAbility();
+                // Attack with ability - redirect to exploration mode
+                AnsiConsole.MarkupLine("[yellow]Please use this feature in Exploration Mode[/]");
+                PressAnyKey();
                 break;
 
             // B-Level Features
@@ -63,7 +293,9 @@ public class GameEngine
                 DisplayRoomDetails();
                 break;
             case "10":
-                NavigateRooms();
+                // Navigate rooms - redirect to exploration mode
+                AnsiConsole.MarkupLine("[yellow]Please use this feature in Exploration Mode[/]");
+                PressAnyKey();
                 break;
 
             // A-Level Features
@@ -78,47 +310,27 @@ public class GameEngine
                 break;
 
             case "0":
-                _logger.LogInformation("User exited the application");
-                _outputManager.WriteLine("Exiting game...", ConsoleColor.Red);
-                _outputManager.Display();
-                Environment.Exit(0);
+                _currentMode = GameMode.Exploration;
                 break;
             default:
-                _outputManager.WriteLine("Invalid selection.", ConsoleColor.Red);
-                _outputManager.Display();
+                AnsiConsole.MarkupLine("[red]Invalid selection.[/]");
+                PressAnyKey();
                 break;
         }
-
-        // Show menu again after action completes
-        _menuManager.ShowMainMenu(MainMenuChoice);
     }
+
+    #endregion
+
+    #region Basic CRUD Operations
 
     private void AddCharacter()
     {
         _logger.LogInformation("User selected Add Character");
-        _outputManager.WriteLine("=== Add New Character ===", ConsoleColor.Yellow);
+        AnsiConsole.MarkupLine("[yellow]=== Add New Character ===[/]");
 
-        _outputManager.WriteLine("Enter character name:");
-        _outputManager.Display();
-        var name = Console.ReadLine();
-
-        _outputManager.WriteLine("Enter health:");
-        _outputManager.Display();
-        if (!int.TryParse(Console.ReadLine(), out int health))
-        {
-            _outputManager.WriteLine("Invalid health value.", ConsoleColor.Red);
-            _outputManager.Display();
-            return;
-        }
-
-        _outputManager.WriteLine("Enter experience:");
-        _outputManager.Display();
-        if (!int.TryParse(Console.ReadLine(), out int experience))
-        {
-            _outputManager.WriteLine("Invalid experience value.", ConsoleColor.Red);
-            _outputManager.Display();
-            return;
-        }
+        var name = AnsiConsole.Ask<string>("Enter character [green]name[/]:");
+        var health = AnsiConsole.Ask<int>("Enter [green]health[/]:");
+        var experience = AnsiConsole.Ask<int>("Enter [green]experience[/]:");
 
         var player = new Player
         {
@@ -131,131 +343,141 @@ public class GameEngine
         _context.SaveChanges();
 
         _logger.LogInformation("Character {Name} added to database with Id {Id}", name, player.Id);
-        _outputManager.WriteLine($"Character '{name}' added successfully!", ConsoleColor.Green);
-        _outputManager.Display();
+        AnsiConsole.MarkupLine($"[green]Character '{name}' added successfully![/]");
         Thread.Sleep(1000);
     }
 
     private void EditCharacter()
     {
         _logger.LogInformation("User selected Edit Character");
-        _outputManager.WriteLine("=== Edit Character ===", ConsoleColor.Yellow);
+        AnsiConsole.MarkupLine("[yellow]=== Edit Character ===[/]");
 
-        _outputManager.WriteLine("Enter character ID to edit:");
-        _outputManager.Display();
-        if (!int.TryParse(Console.ReadLine(), out int id))
-        {
-            _outputManager.WriteLine("Invalid ID.", ConsoleColor.Red);
-            _outputManager.Display();
-            return;
-        }
+        var id = AnsiConsole.Ask<int>("Enter character [green]ID[/] to edit:");
 
         var player = _context.Players.Find(id);
         if (player == null)
         {
             _logger.LogWarning("Character with Id {Id} not found", id);
-            _outputManager.WriteLine($"Character with ID {id} not found.", ConsoleColor.Red);
-            _outputManager.Display();
+            AnsiConsole.MarkupLine($"[red]Character with ID {id} not found.[/]");
+            PressAnyKey();
             return;
         }
 
-        _outputManager.WriteLine($"Editing: {player.Name}");
-        _outputManager.WriteLine("Enter new name (or press Enter to keep current):");
-        _outputManager.Display();
-        var name = Console.ReadLine();
-        if (!string.IsNullOrWhiteSpace(name))
+        AnsiConsole.MarkupLine($"Editing: [cyan]{player.Name}[/]");
+
+        if (AnsiConsole.Confirm("Update name?"))
         {
-            player.Name = name;
+            player.Name = AnsiConsole.Ask<string>("Enter new [green]name[/]:");
         }
 
-        _outputManager.WriteLine("Enter new health (or press Enter to keep current):");
-        _outputManager.Display();
-        var healthInput = Console.ReadLine();
-        if (int.TryParse(healthInput, out int health))
+        if (AnsiConsole.Confirm("Update health?"))
         {
-            player.Health = health;
+            player.Health = AnsiConsole.Ask<int>("Enter new [green]health[/]:");
         }
 
-        _outputManager.WriteLine("Enter new experience (or press Enter to keep current):");
-        _outputManager.Display();
-        var expInput = Console.ReadLine();
-        if (int.TryParse(expInput, out int experience))
+        if (AnsiConsole.Confirm("Update experience?"))
         {
-            player.Experience = experience;
+            player.Experience = AnsiConsole.Ask<int>("Enter new [green]experience[/]:");
         }
 
         _context.SaveChanges();
 
         _logger.LogInformation("Character {Name} (Id: {Id}) updated", player.Name, player.Id);
-        _outputManager.WriteLine($"Character '{player.Name}' updated successfully!", ConsoleColor.Green);
-        _outputManager.Display();
+        AnsiConsole.MarkupLine($"[green]Character '{player.Name}' updated successfully![/]");
         Thread.Sleep(1000);
     }
 
     private void DisplayAllCharacters()
     {
         _logger.LogInformation("User selected Display All Characters");
-        _outputManager.WriteLine("=== All Characters ===", ConsoleColor.Yellow);
+        AnsiConsole.MarkupLine("[yellow]=== All Characters ===[/]");
 
-        var players = _context.Players.ToList();
+        var players = _context.Players.Include(p => p.Room).ToList();
 
         if (!players.Any())
         {
-            _outputManager.WriteLine("No characters found.", ConsoleColor.Red);
+            AnsiConsole.MarkupLine("[red]No characters found.[/]");
         }
         else
         {
+            var table = new Table();
+            table.AddColumn("ID");
+            table.AddColumn("Name");
+            table.AddColumn("Health");
+            table.AddColumn("Experience");
+            table.AddColumn("Location");
+
             foreach (var player in players)
             {
-                _outputManager.WriteLine($"ID: {player.Id} | Name: {player.Name} | Health: {player.Health} | Experience: {player.Experience}", ConsoleColor.Cyan);
+                table.AddRow(
+                    player.Id.ToString(),
+                    player.Name,
+                    player.Health.ToString(),
+                    player.Experience.ToString(),
+                    player.Room?.Name ?? "Unknown"
+                );
             }
+
+            AnsiConsole.Write(table);
         }
 
-        _outputManager.Display();
-        _outputManager.WriteLine("\nPress any key to continue...");
-        _outputManager.Display();
-        Console.ReadKey();
+        PressAnyKey();
     }
 
     private void SearchCharacterByName()
     {
         _logger.LogInformation("User selected Search Character");
-        _outputManager.WriteLine("=== Search Character ===", ConsoleColor.Yellow);
+        AnsiConsole.MarkupLine("[yellow]=== Search Character ===[/]");
 
-        _outputManager.WriteLine("Enter character name to search:");
-        _outputManager.Display();
-        var searchName = Console.ReadLine();
+        var searchName = AnsiConsole.Ask<string>("Enter character [green]name[/] to search:");
 
         var players = _context.Players
+            .Include(p => p.Room)
             .Where(p => p.Name.ToLower().Contains(searchName.ToLower()))
             .ToList();
 
         if (!players.Any())
         {
             _logger.LogInformation("No characters found matching '{SearchName}'", searchName);
-            _outputManager.WriteLine($"No characters found matching '{searchName}'.", ConsoleColor.Red);
+            AnsiConsole.MarkupLine($"[red]No characters found matching '{searchName}'.[/]");
         }
         else
         {
             _logger.LogInformation("Found {Count} character(s) matching '{SearchName}'", players.Count, searchName);
+
+            var table = new Table();
+            table.AddColumn("ID");
+            table.AddColumn("Name");
+            table.AddColumn("Health");
+            table.AddColumn("Experience");
+            table.AddColumn("Location");
+
             foreach (var player in players)
             {
-                _outputManager.WriteLine($"ID: {player.Id} | Name: {player.Name} | Health: {player.Health} | Experience: {player.Experience}", ConsoleColor.Cyan);
+                table.AddRow(
+                    player.Id.ToString(),
+                    player.Name,
+                    player.Health.ToString(),
+                    player.Experience.ToString(),
+                    player.Room?.Name ?? "Unknown"
+                );
             }
+
+            AnsiConsole.Write(table);
         }
 
-        _outputManager.Display();
-        _outputManager.WriteLine("\nPress any key to continue...");
-        _outputManager.Display();
-        Console.ReadKey();
+        PressAnyKey();
     }
+
+    #endregion
 
     #region C-Level Requirements
 
     // TODO: Implement this method
     // Requirements:
-    // - Prompt the user to select an existing character (by ID or name)
-    // - Display a list of available abilities (you may need to create abilities first or use existing ones)
+    // - Display a list of existing characters
+    // - Prompt user to select a character (by ID)
+    // - Display a list of available abilities from the database
     // - Prompt user to select an ability to add
     // - Associate the ability with the character using the many-to-many relationship
     // - Save changes to the database
@@ -264,14 +486,13 @@ public class GameEngine
     private void AddAbilityToCharacter()
     {
         _logger.LogInformation("User selected Add Ability to Character");
-        _outputManager.WriteLine("=== Add Ability to Character ===", ConsoleColor.Yellow);
+        AnsiConsole.MarkupLine("[yellow]=== Add Ability to Character ===[/]");
 
         // TODO: Implement this method
-        _outputManager.WriteLine("This feature is not yet implemented.", ConsoleColor.Red);
-        _outputManager.WriteLine("TODO: Allow users to add abilities to existing characters.", ConsoleColor.Yellow);
+        AnsiConsole.MarkupLine("[red]This feature is not yet implemented.[/]");
+        AnsiConsole.MarkupLine("[yellow]TODO: Allow users to add abilities to existing characters.[/]");
 
-        _outputManager.Display();
-        Thread.Sleep(2000);
+        PressAnyKey();
     }
 
     // TODO: Implement this method
@@ -279,44 +500,20 @@ public class GameEngine
     // - Prompt the user to select a character (by ID or name)
     // - Retrieve the character and their abilities from the database (use Include or lazy loading)
     // - Display the character's name and basic info
-    // - Display all abilities associated with that character
+    // - Display all abilities associated with that character in a formatted table
     // - For each ability, show: Name, Description, and any other relevant properties (e.g., Damage, Distance for ShoveAbility)
     // - Handle the case where the character has no abilities
     // - Log the operation
     private void DisplayCharacterAbilities()
     {
         _logger.LogInformation("User selected Display Character Abilities");
-        _outputManager.WriteLine("=== Display Character Abilities ===", ConsoleColor.Yellow);
+        AnsiConsole.MarkupLine("[yellow]=== Display Character Abilities ===[/]");
 
         // TODO: Implement this method
-        _outputManager.WriteLine("This feature is not yet implemented.", ConsoleColor.Red);
-        _outputManager.WriteLine("TODO: Display all abilities for a selected character.", ConsoleColor.Yellow);
+        AnsiConsole.MarkupLine("[red]This feature is not yet implemented.[/]");
+        AnsiConsole.MarkupLine("[yellow]TODO: Display all abilities for a selected character.[/]");
 
-        _outputManager.Display();
-        Thread.Sleep(2000);
-    }
-
-    // TODO: Implement this method
-    // Requirements:
-    // - Prompt user to select an attacking character
-    // - Prompt user to select a target (another character or monster)
-    // - Display available abilities for the attacker
-    // - Prompt user to select an ability to use
-    // - Execute the ability's Activate method (this should apply damage/effects)
-    // - Display the results of the attack (damage dealt, effects applied, etc.)
-    // - Update health values in the database
-    // - Log the operation
-    private void AttackWithAbility()
-    {
-        _logger.LogInformation("User selected Attack with Ability");
-        _outputManager.WriteLine("=== Attack with Ability ===", ConsoleColor.Yellow);
-
-        // TODO: Implement this method
-        _outputManager.WriteLine("This feature is not yet implemented.", ConsoleColor.Red);
-        _outputManager.WriteLine("TODO: Allow character to attack using an ability.", ConsoleColor.Yellow);
-
-        _outputManager.Display();
-        Thread.Sleep(2000);
+        PressAnyKey();
     }
 
     #endregion
@@ -327,7 +524,7 @@ public class GameEngine
     // Requirements:
     // - Prompt user for room name
     // - Prompt user for room description
-    // - Optionally prompt to add a character/monster to the room (by ID)
+    // - Optionally prompt for navigation (which rooms connect in which directions)
     // - Create a new Room entity
     // - Save to the database
     // - Display confirmation with room details
@@ -335,21 +532,21 @@ public class GameEngine
     private void AddRoom()
     {
         _logger.LogInformation("User selected Add Room");
-        _outputManager.WriteLine("=== Add New Room ===", ConsoleColor.Yellow);
+        AnsiConsole.MarkupLine("[yellow]=== Add New Room ===[/]");
 
         // TODO: Implement this method
-        _outputManager.WriteLine("This feature is not yet implemented.", ConsoleColor.Red);
-        _outputManager.WriteLine("TODO: Allow users to create new rooms.", ConsoleColor.Yellow);
+        AnsiConsole.MarkupLine("[red]This feature is not yet implemented.[/]");
+        AnsiConsole.MarkupLine("[yellow]TODO: Allow users to create new rooms and connect them to the world.[/]");
 
-        _outputManager.Display();
-        Thread.Sleep(2000);
+        PressAnyKey();
     }
 
     // TODO: Implement this method
     // Requirements:
+    // - Display a list of all rooms
     // - Prompt user to select a room (by ID or name)
     // - Retrieve room from database with related data (Include Players and Monsters)
-    // - Display room name and description
+    // - Display room name, description, and exits
     // - Display list of all players in the room (or message if none)
     // - Display list of all monsters in the room (or message if none)
     // - Handle case where room is empty gracefully
@@ -357,38 +554,13 @@ public class GameEngine
     private void DisplayRoomDetails()
     {
         _logger.LogInformation("User selected Display Room Details");
-        _outputManager.WriteLine("=== Display Room Details ===", ConsoleColor.Yellow);
+        AnsiConsole.MarkupLine("[yellow]=== Display Room Details ===[/]");
 
         // TODO: Implement this method
-        _outputManager.WriteLine("This feature is not yet implemented.", ConsoleColor.Red);
-        _outputManager.WriteLine("TODO: Display detailed information about a room and its inhabitants.", ConsoleColor.Yellow);
+        AnsiConsole.MarkupLine("[red]This feature is not yet implemented.[/]");
+        AnsiConsole.MarkupLine("[yellow]TODO: Display detailed information about a room and its inhabitants.[/]");
 
-        _outputManager.Display();
-        Thread.Sleep(2000);
-    }
-
-    // TODO: Implement this method
-    // Requirements:
-    // - Display list of all available rooms
-    // - Prompt user to select a character that will navigate
-    // - Allow user to move character between rooms
-    // - Update character's RoomId in the database
-    // - Display room details upon entering (name, description, inhabitants)
-    // - Provide option to move to another room or exit navigation
-    // - BONUS: Use Spectre.Console or another library to display a map
-    // - Log the operation
-    private void NavigateRooms()
-    {
-        _logger.LogInformation("User selected Navigate Rooms");
-        _outputManager.WriteLine("=== Navigate Rooms ===", ConsoleColor.Yellow);
-
-        // TODO: Implement this method
-        _outputManager.WriteLine("This feature is not yet implemented.", ConsoleColor.Red);
-        _outputManager.WriteLine("TODO: Allow characters to move between rooms.", ConsoleColor.Yellow);
-        _outputManager.WriteLine("BONUS: Consider adding a map visualization using Spectre.Console.", ConsoleColor.Magenta);
-
-        _outputManager.Display();
-        Thread.Sleep(2000);
+        PressAnyKey();
     }
 
     #endregion
@@ -397,24 +569,24 @@ public class GameEngine
 
     // TODO: Implement this method
     // Requirements:
+    // - Display list of all rooms
     // - Prompt user to select a room
-    // - Prompt user to select an attribute to search by (Health, Attack/Equipment, Name, etc.)
-    // - Prompt user for search criteria (e.g., "Health > 50", "Name contains 'Bob'")
+    // - Display a menu of attributes to filter by (Health, Name, Experience, etc.)
+    // - Prompt user for filter criteria
     // - Query the database for characters in that room matching the criteria
-    // - Display matching characters with relevant details
+    // - Display matching characters with relevant details in a formatted table
     // - Handle case where no characters match
     // - Log the operation
     private void ListCharactersInRoomByAttribute()
     {
         _logger.LogInformation("User selected List Characters in Room by Attribute");
-        _outputManager.WriteLine("=== List Characters in Room by Attribute ===", ConsoleColor.Yellow);
+        AnsiConsole.MarkupLine("[yellow]=== List Characters in Room by Attribute ===[/]");
 
         // TODO: Implement this method
-        _outputManager.WriteLine("This feature is not yet implemented.", ConsoleColor.Red);
-        _outputManager.WriteLine("TODO: Find characters in a room matching specific criteria.", ConsoleColor.Yellow);
+        AnsiConsole.MarkupLine("[red]This feature is not yet implemented.[/]");
+        AnsiConsole.MarkupLine("[yellow]TODO: Find characters in a room matching specific criteria.[/]");
 
-        _outputManager.Display();
-        Thread.Sleep(2000);
+        PressAnyKey();
     }
 
     // TODO: Implement this method
@@ -425,19 +597,18 @@ public class GameEngine
     // - Show room name and description
     // - Under each room, list all characters with their details
     // - Handle rooms with no characters gracefully
-    // - Consider using a formatted table or grouped display
+    // - Consider using Spectre.Console panels or tables for nice formatting
     // - Log the operation
     private void ListAllRoomsWithCharacters()
     {
         _logger.LogInformation("User selected List All Rooms with Characters");
-        _outputManager.WriteLine("=== List All Rooms with Characters ===", ConsoleColor.Yellow);
+        AnsiConsole.MarkupLine("[yellow]=== List All Rooms with Characters ===[/]");
 
         // TODO: Implement this method
-        _outputManager.WriteLine("This feature is not yet implemented.", ConsoleColor.Red);
-        _outputManager.WriteLine("TODO: Group and display all characters by their rooms.", ConsoleColor.Yellow);
+        AnsiConsole.MarkupLine("[red]This feature is not yet implemented.[/]");
+        AnsiConsole.MarkupLine("[yellow]TODO: Group and display all characters by their rooms.[/]");
 
-        _outputManager.Display();
-        Thread.Sleep(2000);
+        PressAnyKey();
     }
 
     // TODO: Implement this method
@@ -450,19 +621,39 @@ public class GameEngine
     // - Display the room/location where the character is located
     // - Handle case where equipment is not found
     // - Handle case where equipment exists but isn't equipped by anyone
+    // - Use Spectre.Console for nice formatting
     // - Log the operation
     private void FindEquipmentLocation()
     {
         _logger.LogInformation("User selected Find Equipment Location");
-        _outputManager.WriteLine("=== Find Equipment Location ===", ConsoleColor.Yellow);
+        AnsiConsole.MarkupLine("[yellow]=== Find Equipment Location ===[/]");
 
         // TODO: Implement this method
-        _outputManager.WriteLine("This feature is not yet implemented.", ConsoleColor.Red);
-        _outputManager.WriteLine("TODO: Find which character has specific equipment and where they are located.", ConsoleColor.Yellow);
+        AnsiConsole.MarkupLine("[red]This feature is not yet implemented.[/]");
+        AnsiConsole.MarkupLine("[yellow]TODO: Find which character has specific equipment and where they are located.[/]");
 
-        _outputManager.Display();
-        Thread.Sleep(2000);
+        PressAnyKey();
     }
 
     #endregion
+
+    #region Helper Methods
+
+    private void PressAnyKey()
+    {
+        AnsiConsole.WriteLine();
+        AnsiConsole.Markup("[dim]Press any key to continue...[/]");
+        Console.ReadKey(true);
+    }
+
+    #endregion
+}
+
+/// <summary>
+/// Represents the current game mode
+/// </summary>
+public enum GameMode
+{
+    Exploration,
+    Admin
 }
