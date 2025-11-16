@@ -1,4 +1,5 @@
 using ConsoleRpg.Helpers;
+using ConsoleRpg.Models;
 using ConsoleRpgEntities.Data;
 using ConsoleRpgEntities.Models.Characters;
 using ConsoleRpgEntities.Models.Rooms;
@@ -12,7 +13,6 @@ public class GameEngine
 {
     private readonly GameContext _context;
     private readonly MenuManager _menuManager;
-    private readonly OutputManager _outputManager;
     private readonly MapManager _mapManager;
     private readonly ExplorationUI _explorationUI;
     private readonly PlayerService _playerService;
@@ -23,13 +23,12 @@ public class GameEngine
     private Room _currentRoom;
     private GameMode _currentMode = GameMode.Exploration;
 
-    public GameEngine(GameContext context, MenuManager menuManager, OutputManager outputManager,
-                     MapManager mapManager, ExplorationUI explorationUI, PlayerService playerService,
+    public GameEngine(GameContext context, MenuManager menuManager, MapManager mapManager,
+                     ExplorationUI explorationUI, PlayerService playerService,
                      AdminService adminService, ILogger<GameEngine> logger)
     {
         _context = context;
         _menuManager = menuManager;
-        _outputManager = outputManager;
         _mapManager = mapManager;
         _explorationUI = explorationUI;
         _playerService = playerService;
@@ -121,38 +120,39 @@ public class GameEngine
 
     /// <summary>
     /// Handles player action selection during exploration mode
+    /// Processes service results and displays them through ExplorationUI
     /// </summary>
     private void HandleExplorationAction(string action, bool hasMonsters)
     {
         switch (action)
         {
             case "Go North":
-                _currentRoom = _playerService.MoveToRoom(_currentPlayer, _currentRoom, _currentRoom.NorthRoomId, "North");
+                HandleMoveResult(_playerService.MoveToRoom(_currentPlayer, _currentRoom, _currentRoom.NorthRoomId, "North"));
                 break;
             case "Go South":
-                _currentRoom = _playerService.MoveToRoom(_currentPlayer, _currentRoom, _currentRoom.SouthRoomId, "South");
+                HandleMoveResult(_playerService.MoveToRoom(_currentPlayer, _currentRoom, _currentRoom.SouthRoomId, "South"));
                 break;
             case "Go East":
-                _currentRoom = _playerService.MoveToRoom(_currentPlayer, _currentRoom, _currentRoom.EastRoomId, "East");
+                HandleMoveResult(_playerService.MoveToRoom(_currentPlayer, _currentRoom, _currentRoom.EastRoomId, "East"));
                 break;
             case "Go West":
-                _currentRoom = _playerService.MoveToRoom(_currentPlayer, _currentRoom, _currentRoom.WestRoomId, "West");
+                HandleMoveResult(_playerService.MoveToRoom(_currentPlayer, _currentRoom, _currentRoom.WestRoomId, "West"));
                 break;
             case "View Map":
                 _explorationUI.AddMessage("[cyan]Viewing map[/]");
                 _explorationUI.AddOutput("[cyan]The map is displayed above showing your current location and surroundings.[/]");
                 break;
             case "View Inventory":
-                _playerService.ShowInventory(_currentPlayer);
+                HandleActionResult(_playerService.ShowInventory(_currentPlayer));
                 break;
             case "View Character Stats":
-                _playerService.ShowCharacterStats(_currentPlayer);
+                HandleActionResult(_playerService.ShowCharacterStats(_currentPlayer));
                 break;
             case "Attack Monster":
-                _playerService.AttackMonster();
+                HandleActionResult(_playerService.AttackMonster());
                 break;
             case "Use Ability":
-                _playerService.UseAbilityOnMonster();
+                HandleActionResult(_playerService.UseAbilityOnMonster());
                 break;
             case "Return to Main Menu":
                 _currentMode = GameMode.Admin;
@@ -164,6 +164,29 @@ public class GameEngine
                 _explorationUI.AddOutput($"[red]Unknown action: {action}[/]");
                 break;
         }
+    }
+
+    /// <summary>
+    /// Handles the result of a move operation
+    /// </summary>
+    private void HandleMoveResult(ServiceResult<Room> result)
+    {
+        _explorationUI.AddMessage(result.Message);
+        _explorationUI.AddOutput(result.DetailedOutput);
+
+        if (result.Success && result.Value != null)
+        {
+            _currentRoom = result.Value;
+        }
+    }
+
+    /// <summary>
+    /// Handles the result of a general player action
+    /// </summary>
+    private void HandleActionResult(ServiceResult result)
+    {
+        _explorationUI.AddMessage(result.Message);
+        _explorationUI.AddOutput(result.DetailedOutput);
     }
 
     #endregion
@@ -194,7 +217,6 @@ public class GameEngine
                 break;
             case "2":
                 _adminService.EditCharacter();
-                PressAnyKey();
                 break;
             case "3":
                 _adminService.DisplayAllCharacters();
@@ -208,11 +230,9 @@ public class GameEngine
             // C-Level Features
             case "5":
                 _adminService.AddAbilityToCharacter();
-                PressAnyKey();
                 break;
             case "6":
                 _adminService.DisplayCharacterAbilities();
-                PressAnyKey();
                 break;
             case "7":
                 // Attack with ability - redirect to exploration mode
@@ -223,11 +243,9 @@ public class GameEngine
             // B-Level Features
             case "8":
                 _adminService.AddRoom();
-                PressAnyKey();
                 break;
             case "9":
                 _adminService.DisplayRoomDetails();
-                PressAnyKey();
                 break;
             case "10":
                 // Navigate rooms - redirect to exploration mode
@@ -238,15 +256,12 @@ public class GameEngine
             // A-Level Features
             case "11":
                 _adminService.ListCharactersInRoomByAttribute();
-                PressAnyKey();
                 break;
             case "12":
                 _adminService.ListAllRoomsWithCharacters();
-                PressAnyKey();
                 break;
             case "13":
                 _adminService.FindEquipmentLocation();
-                PressAnyKey();
                 break;
 
             default:
