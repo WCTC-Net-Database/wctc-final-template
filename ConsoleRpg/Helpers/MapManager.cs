@@ -1,5 +1,6 @@
 using ConsoleRpgEntities.Models.Rooms;
 using Spectre.Console;
+using System.Text;
 
 namespace ConsoleRpg.Helpers
 {
@@ -10,6 +11,30 @@ namespace ConsoleRpg.Helpers
         public MapManager(OutputManager outputManager)
         {
             _outputManager = outputManager;
+        }
+
+        /// <summary>
+        /// Displays a compact visual map of the world using Spectre.Console Layout
+        /// </summary>
+        public Panel GetCompactMapPanel(IEnumerable<Room> rooms, Room currentRoom)
+        {
+            if (!rooms.Any())
+            {
+                return new Panel("[red]No rooms available.[/]")
+                {
+                    Header = new PanelHeader("[yellow]World Map[/]"),
+                    Border = BoxBorder.Rounded
+                };
+            }
+
+            var mapContent = BuildMapContent(rooms, currentRoom);
+            var panel = new Panel(mapContent)
+            {
+                Header = new PanelHeader("[yellow]World Map[/]"),
+                Border = BoxBorder.Rounded
+            };
+
+            return panel;
         }
 
         /// <summary>
@@ -140,6 +165,173 @@ namespace ConsoleRpg.Helpers
             legend.Border = BoxBorder.Rounded;
             AnsiConsole.Write(legend);
             AnsiConsole.WriteLine();
+        }
+
+        /// <summary>
+        /// Builds the map content as a markup string
+        /// </summary>
+        private Markup BuildMapContent(IEnumerable<Room> rooms, Room currentRoom)
+        {
+            var sb = new StringBuilder();
+
+            // Calculate map boundaries
+            int minX = rooms.Min(r => r.X);
+            int maxX = rooms.Max(r => r.X);
+            int minY = rooms.Min(r => r.Y);
+            int maxY = rooms.Max(r => r.Y);
+
+            // Create the map from top to bottom
+            for (int y = maxY; y >= minY; y--)
+            {
+                for (int x = minX; x <= maxX; x++)
+                {
+                    var room = rooms.FirstOrDefault(r => r.X == x && r.Y == y);
+
+                    if (room != null)
+                    {
+                        // Current room is highlighted
+                        if (room.Id == currentRoom?.Id)
+                        {
+                            sb.Append("[green on white][[@]][/]");
+                        }
+                        // Room with monsters
+                        else if (room.Monsters?.Any() == true)
+                        {
+                            sb.Append("[red][[M]][/]");
+                        }
+                        // Room with players
+                        else if (room.Players?.Any() == true)
+                        {
+                            sb.Append("[cyan][[P]][/]");
+                        }
+                        // Empty room
+                        else
+                        {
+                            sb.Append("[blue][[■]][/]");
+                        }
+
+                        // Add connections
+                        if (room.EastRoom != null && x < maxX)
+                        {
+                            sb.Append("[dim]═[/]");
+                        }
+                        else if (x < maxX)
+                        {
+                            sb.Append(" ");
+                        }
+                    }
+                    else
+                    {
+                        sb.Append("   ");
+                        if (x < maxX)
+                        {
+                            sb.Append(" ");
+                        }
+                    }
+                }
+
+                sb.AppendLine();
+
+                // Add vertical connections if not the last row
+                if (y > minY)
+                {
+                    for (int x = minX; x <= maxX; x++)
+                    {
+                        var room = rooms.FirstOrDefault(r => r.X == x && r.Y == y);
+
+                        if (room != null && room.SouthRoom != null)
+                        {
+                            sb.Append("[dim] ║ [/]");
+                        }
+                        else
+                        {
+                            sb.Append("   ");
+                        }
+
+                        if (x < maxX)
+                        {
+                            sb.Append(" ");
+                        }
+                    }
+                    sb.AppendLine();
+                }
+            }
+
+            // Add compact legend
+            sb.AppendLine();
+            sb.Append("[dim][[@]]=You [[M]]=Monster [[P]]=Player [[■]]=Empty[/]");
+
+            return new Markup(sb.ToString());
+        }
+
+        /// <summary>
+        /// Gets a compact room details panel
+        /// </summary>
+        public Panel GetCompactRoomDetailsPanel(Room room)
+        {
+            if (room == null)
+            {
+                return new Panel("[red]No room information.[/]")
+                {
+                    Header = new PanelHeader("[yellow]Current Room[/]"),
+                    Border = BoxBorder.Rounded
+                };
+            }
+
+            var sb = new StringBuilder();
+
+            // Room description
+            sb.AppendLine($"[bold]{room.Description}[/]");
+            sb.AppendLine();
+
+            // Exits
+            var exits = new List<string>();
+            if (room.NorthRoom != null) exits.Add("[cyan]N[/]orth");
+            if (room.SouthRoom != null) exits.Add("[cyan]S[/]outh");
+            if (room.EastRoom != null) exits.Add("[cyan]E[/]ast");
+            if (room.WestRoom != null) exits.Add("[cyan]W[/]est");
+
+            if (exits.Any())
+            {
+                sb.AppendLine($"[green]Exits:[/] {string.Join(", ", exits)}");
+            }
+            else
+            {
+                sb.AppendLine("[dim]No exits available.[/]");
+            }
+
+            // Monsters
+            if (room.Monsters?.Any() == true)
+            {
+                sb.AppendLine();
+                sb.AppendLine($"[red]Monsters:[/] {string.Join(", ", room.Monsters.Select(m => $"{m.Name} (HP:{m.Health})"))}");
+            }
+
+            // Players
+            if (room.Players?.Any() == true)
+            {
+                sb.AppendLine();
+                sb.AppendLine($"[cyan]Players:[/] {string.Join(", ", room.Players.Select(p => p.Name))}");
+            }
+
+            return new Panel(sb.ToString().TrimEnd())
+            {
+                Header = new PanelHeader($"[yellow]{room.Name}[/]"),
+                Border = BoxBorder.Rounded
+            };
+        }
+
+        /// <summary>
+        /// Gets a compact actions panel
+        /// </summary>
+        public Panel GetCompactActionsPanel(Room currentRoom, bool hasMonsters)
+        {
+            var actions = BuildActionsList(currentRoom, hasMonsters);
+            return new Panel(actions)
+            {
+                Header = new PanelHeader("[green]Available Actions[/]"),
+                Border = BoxBorder.Rounded
+            };
         }
 
         /// <summary>

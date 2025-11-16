@@ -102,20 +102,34 @@ public class GameEngine
             .Include(r => r.WestRoom)
             .FirstOrDefault(r => r.Id == _currentRoom.Id);
 
-        // Display the world map
+        // Get all rooms for map
         var allRooms = _context.Rooms.ToList();
-        _mapManager.DisplayMap(allRooms, _currentRoom);
-
-        AnsiConsole.WriteLine();
-
-        // Display current room details
-        _mapManager.DisplayRoomDetails(_currentRoom);
-
-        // Display available actions based on room state
         bool hasMonsters = _currentRoom.Monsters != null && _currentRoom.Monsters.Any();
-        _mapManager.DisplayAvailableActions(_currentRoom, hasMonsters);
+
+        // Create compact layout using Spectre.Console Layout
+        var layout = new Layout("Root")
+            .SplitColumns(
+                new Layout("Left"),
+                new Layout("Right")
+            );
+
+        // Configure left side (Map)
+        layout["Left"].Update(_mapManager.GetCompactMapPanel(allRooms, _currentRoom));
+
+        // Configure right side (Room details and actions)
+        layout["Right"].SplitRows(
+            new Layout("RoomDetails"),
+            new Layout("Actions")
+        );
+
+        layout["Right"]["RoomDetails"].Update(_mapManager.GetCompactRoomDetailsPanel(_currentRoom));
+        layout["Right"]["Actions"].Update(_mapManager.GetCompactActionsPanel(_currentRoom, hasMonsters));
+
+        // Display the layout
+        AnsiConsole.Write(layout);
 
         // Get player input
+        AnsiConsole.WriteLine();
         AnsiConsole.Markup("[white]What would you like to do? [/]");
         var input = Console.ReadLine()?.Trim().ToUpper();
 
