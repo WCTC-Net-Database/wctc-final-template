@@ -50,5 +50,6 @@ public static class Startup
         services.AddTransient<MenuManager>();
         services.AddSingleton<OutputManager>();
         services.AddSingleton<MapManager>();
+        services.AddSingleton<ExplorationUI>();
     }
 }
