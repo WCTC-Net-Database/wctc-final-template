@@ -16,8 +16,7 @@ public class MenuManager
         _outputManager.WriteLine("      ADMIN / DEVELOPER MENU", ConsoleColor.Yellow);
         _outputManager.WriteLine("=================================", ConsoleColor.Yellow);
         _outputManager.WriteLine("");
-        _outputManager.WriteLine("WORLD EXPLORATION:", ConsoleColor.Magenta);
-        _outputManager.WriteLine("E. Explore World (Start Adventure!)", ConsoleColor.Yellow);
+        _outputManager.WriteLine("E. Return to Exploration Mode", ConsoleColor.Yellow);
         _outputManager.WriteLine("");
         _outputManager.WriteLine("BASIC FEATURES:", ConsoleColor.Green);
         _outputManager.WriteLine("1. Add New Character", ConsoleColor.Cyan);
@@ -39,8 +38,6 @@ public class MenuManager
         _outputManager.WriteLine("11. List Characters in Room by Attribute", ConsoleColor.Cyan);
         _outputManager.WriteLine("12. List All Rooms with Characters", ConsoleColor.Cyan);
         _outputManager.WriteLine("13. Find Equipment Location", ConsoleColor.Cyan);
-        _outputManager.WriteLine("");
-        _outputManager.WriteLine("0. Return to Exploration Mode", ConsoleColor.Green);
         _outputManager.WriteLine("");
         _outputManager.WriteLine("Select an option:", ConsoleColor.White);
         _outputManager.Display();
