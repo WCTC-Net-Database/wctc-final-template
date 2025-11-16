@@ -10,7 +10,7 @@ namespace ConsoleRpgEntities.Models.Abilities.PlayerAbilities
 
         public override void Activate(IPlayer user, ITargetable target)
         {
-            // Fireball ability logic
+            // Shove ability logic
             Console.WriteLine($"{user.Name} shoves {target.Name} back {Distance} feet, dealing {Damage} damage!");
         }
     }

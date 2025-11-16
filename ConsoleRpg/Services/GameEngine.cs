@@ -12,6 +12,7 @@ public class GameEngine
 {
     private readonly GameContext _context;
     private readonly MenuManager _menuManager;
+    private readonly OutputManager _outputManager;
     private readonly MapManager _mapManager;
     private readonly ILogger<GameEngine> _logger;
 
@@ -19,19 +20,12 @@ public class GameEngine
     private Room _currentRoom;
     private GameMode _currentMode = GameMode.Exploration;
 
-    public GameEngine(GameContext context, MenuManager menuManager, MapManager mapManager, ILogger<GameEngine> logger)
-    {
-        _menuManager = menuManager;
-    private readonly OutputManager _outputManager;
-    private readonly MapManager _mapManager;
-    private readonly ILogger<GameEngine> _logger;
-
     public GameEngine(GameContext context, MenuManager menuManager, OutputManager outputManager, MapManager mapManager, ILogger<GameEngine> logger)
     {
+        _context = context;
         _menuManager = menuManager;
         _outputManager = outputManager;
         _mapManager = mapManager;
-        _context = context;
         _logger = logger;
     }
 
