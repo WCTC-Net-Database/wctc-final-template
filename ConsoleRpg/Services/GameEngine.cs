@@ -108,36 +108,26 @@ public class GameEngine
         var allRooms = _context.Rooms.ToList();
         bool hasMonsters = _currentRoom.Monsters != null && _currentRoom.Monsters.Any();
 
-        // Create layout: Left (Map + Actions) | Right (Room Details + Messages)
+        // Create compact layout: Left (Map) | Right (Room Details + Messages)
         var layout = new Layout("Root")
             .SplitColumns(
-                new Layout("Left"),
+                new Layout("Map"),
                 new Layout("Right")
             );
 
-        // Split left side into rows (Map top, Actions bottom)
-        layout["Left"].SplitRows(
-            new Layout("Map").Ratio(2),
-            new Layout("Actions").Ratio(3)
-        );
-
         // Split right side into rows (Room Details top, Messages bottom)
         layout["Right"].SplitRows(
-            new Layout("RoomDetails").Ratio(3),
-            new Layout("Messages").Ratio(2)
+            new Layout("RoomDetails"),
+            new Layout("Messages")
         );
 
-        // Configure left side
-        layout["Left"]["Map"].Update(_mapManager.GetCompactMapPanel(allRooms, _currentRoom));
-        layout["Left"]["Actions"].Update(_mapManager.GetAvailableActionsPanel(_currentRoom));
-
-        // Configure right side
+        // Configure panels
+        layout["Map"].Update(_mapManager.GetCompactMapPanel(allRooms, _currentRoom));
         layout["Right"]["RoomDetails"].Update(_mapManager.GetCompactRoomDetailsPanel(_currentRoom));
         layout["Right"]["Messages"].Update(GetMessagePanel());
 
         // Display the layout
         AnsiConsole.Write(layout);
-        AnsiConsole.WriteLine();
 
         // Get available actions and let user select
         var actions = _mapManager.GetAvailableActions(_currentRoom);
@@ -177,7 +167,8 @@ public class GameEngine
         return new Panel(content)
         {
             Header = new PanelHeader("[yellow]Messages[/]"),
-            Border = BoxBorder.Rounded
+            Border = BoxBorder.Rounded,
+            Padding = new Padding(1, 0, 1, 0)
         };
     }
 

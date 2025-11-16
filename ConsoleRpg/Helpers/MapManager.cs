@@ -31,7 +31,8 @@ namespace ConsoleRpg.Helpers
             var panel = new Panel(mapContent)
             {
                 Header = new PanelHeader("[yellow]World Map[/]"),
-                Border = BoxBorder.Rounded
+                Border = BoxBorder.Rounded,
+                Padding = new Padding(1, 0, 1, 0)
             };
 
             return panel;
@@ -258,7 +259,6 @@ namespace ConsoleRpg.Helpers
             }
 
             // Add compact legend
-            sb.AppendLine();
             sb.Append("[dim][[@]]=You [[M]]=Monster [[P]]=Player [[■]]=Empty[/]");
 
             return new Markup(sb.ToString());
@@ -274,7 +274,8 @@ namespace ConsoleRpg.Helpers
                 return new Panel("[red]No room information.[/]")
                 {
                     Header = new PanelHeader("[yellow]Current Room[/]"),
-                    Border = BoxBorder.Rounded
+                    Border = BoxBorder.Rounded,
+                    Padding = new Padding(1, 0, 1, 0)
                 };
             }
 
@@ -282,7 +283,6 @@ namespace ConsoleRpg.Helpers
 
             // Room description
             sb.AppendLine($"[bold]{room.Description}[/]");
-            sb.AppendLine();
 
             // Exits
             var exits = new List<string>();
@@ -297,27 +297,26 @@ namespace ConsoleRpg.Helpers
             }
             else
             {
-                sb.AppendLine("[dim]No exits available.[/]");
+                sb.AppendLine("[dim]No exits.[/]");
             }
 
             // Monsters
             if (room.Monsters?.Any() == true)
             {
-                sb.AppendLine();
                 sb.AppendLine($"[red]Monsters:[/] {string.Join(", ", room.Monsters.Select(m => $"{m.Name} (HP:{m.Health})"))}");
             }
 
             // Players
             if (room.Players?.Any() == true)
             {
-                sb.AppendLine();
                 sb.AppendLine($"[cyan]Players:[/] {string.Join(", ", room.Players.Select(p => p.Name))}");
             }
 
             return new Panel(sb.ToString().TrimEnd())
             {
                 Header = new PanelHeader($"[yellow]{room.Name}[/]"),
-                Border = BoxBorder.Rounded
+                Border = BoxBorder.Rounded,
+                Padding = new Padding(1, 0, 1, 0)
             };
         }
 
