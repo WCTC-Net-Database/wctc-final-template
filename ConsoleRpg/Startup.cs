@@ -48,7 +48,6 @@ public static class Startup
         // Register your services
         services.AddTransient<GameEngine>();
         services.AddTransient<MenuManager>();
-        services.AddTransient<MapManager>();
         services.AddSingleton<OutputManager>();
         services.AddSingleton<MapManager>();
     }
