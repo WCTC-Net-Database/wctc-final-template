@@ -133,7 +133,8 @@ public class GameEngine
                 MoveToRoom(_currentRoom.WestRoomId, "West");
                 break;
             case "View Map":
-                _explorationUI.AddMessage("[cyan]Viewing map...[/]");
+                _explorationUI.AddMessage("[cyan]Viewing map[/]");
+                _explorationUI.AddOutput("[cyan]The map is displayed above showing your current location and surroundings.[/]");
                 break;
             case "View Inventory":
                 ShowInventory();
@@ -149,10 +150,12 @@ public class GameEngine
                 break;
             case "Return to Main Menu":
                 _currentMode = GameMode.Admin;
-                _explorationUI.AddMessage("[yellow]Switched to Admin Mode[/]");
+                _explorationUI.AddMessage("[yellow]→ Admin Mode[/]");
+                _explorationUI.AddOutput("[yellow]Switching to Admin Mode for database management and testing.[/]");
                 break;
             default:
-                _explorationUI.AddMessage($"[red]Unknown action: {action}[/]");
+                _explorationUI.AddMessage($"[red]Unknown action[/]");
+                _explorationUI.AddOutput($"[red]Unknown action: {action}[/]");
                 break;
         }
     }
@@ -164,7 +167,8 @@ public class GameEngine
     {
         if (!roomId.HasValue)
         {
-            _explorationUI.AddMessage($"[red]Cannot go {direction} - no exit![/]");
+            _explorationUI.AddMessage($"[red]Cannot go {direction}[/]");
+            _explorationUI.AddOutput($"[red]You cannot go {direction} from here - there is no exit in that direction.[/]");
             return;
         }
 
@@ -184,7 +188,8 @@ public class GameEngine
         _logger.LogInformation("Player {PlayerName} moved {Direction} to {RoomName}",
             _currentPlayer.Name, direction, _currentRoom.Name);
 
-        _explorationUI.AddMessage($"[green]Traveled {direction} to {_currentRoom.Name}[/]");
+        _explorationUI.AddMessage($"[green]→ {direction}[/]");
+        _explorationUI.AddOutput($"[green]You travel {direction} and arrive at {_currentRoom.Name}.[/]");
     }
 
     /// <summary>
@@ -192,7 +197,10 @@ public class GameEngine
     /// </summary>
     private void ShowCharacterStats()
     {
-        _explorationUI.AddMessage($"[yellow]{_currentPlayer.Name}[/] - HP:[green]{_currentPlayer.Health}[/] XP:[cyan]{_currentPlayer.Experience}[/]");
+        _explorationUI.AddMessage($"[cyan]Viewing stats[/]");
+        _explorationUI.AddOutput($"[yellow]Character:[/] {_currentPlayer.Name}\n" +
+                                 $"[green]Health:[/] {_currentPlayer.Health}\n" +
+                                 $"[cyan]Experience:[/] {_currentPlayer.Experience}");
     }
 
     /// <summary>
@@ -200,7 +208,9 @@ public class GameEngine
     /// </summary>
     private void ShowInventory()
     {
-        _explorationUI.AddMessage($"[magenta]Inventory:[/] Equipment: {(_currentPlayer.Equipment != null ? "Equipped" : "None")}, Abilities: {_currentPlayer.Abilities?.Count ?? 0}");
+        _explorationUI.AddMessage($"[magenta]Viewing inventory[/]");
+        _explorationUI.AddOutput($"[magenta]Equipment:[/] {(_currentPlayer.Equipment != null ? "Equipped" : "None")}\n" +
+                                 $"[blue]Abilities:[/] {_currentPlayer.Abilities?.Count ?? 0}");
     }
 
     /// <summary>
@@ -208,7 +218,8 @@ public class GameEngine
     /// </summary>
     private void AttackMonster()
     {
-        _explorationUI.AddMessage("[yellow]TODO: Implement attack logic - students will complete this[/]");
+        _explorationUI.AddMessage("[yellow]Attack (TODO)[/]");
+        _explorationUI.AddOutput("[yellow]TODO: Implement attack logic - students will complete this feature.[/]");
         // Students will implement this
     }
 
@@ -217,7 +228,8 @@ public class GameEngine
     /// </summary>
     private void UseAbilityOnMonster()
     {
-        _explorationUI.AddMessage("[yellow]TODO: Implement ability usage - students will complete this[/]");
+        _explorationUI.AddMessage("[yellow]Ability (TODO)[/]");
+        _explorationUI.AddOutput("[yellow]TODO: Implement ability usage - students will complete this feature.[/]");
         // Students will implement this
     }
 
@@ -312,7 +324,8 @@ public class GameEngine
 
         // Simply switch to exploration mode
         _currentMode = GameMode.Exploration;
-        _explorationUI.AddMessage("[green]Welcome to the world! Select actions from the menu.[/]");
+        _explorationUI.AddMessage("[green]Entered world[/]");
+        _explorationUI.AddOutput("[green]Welcome to the world! Use the menu below to explore, fight monsters, and manage your character.[/]");
     }
 
     #endregion
