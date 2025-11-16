@@ -24,15 +24,12 @@
     <Compile Remove="Data\**" />
     <Compile Remove="Files\**" />
     <Compile Remove="Interfaces\**" />
-    <Compile Remove="Models\**" />
     <EmbeddedResource Remove="Data\**" />
     <EmbeddedResource Remove="Files\**" />
     <EmbeddedResource Remove="Interfaces\**" />
-    <EmbeddedResource Remove="Models\**" />
     <None Remove="Data\**" />
     <None Remove="Files\**" />
     <None Remove="Interfaces\**" />
-    <None Remove="Models\**" />
   </ItemGroup>
 
   <ItemGroup>
