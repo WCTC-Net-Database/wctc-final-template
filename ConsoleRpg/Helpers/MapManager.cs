@@ -55,22 +55,22 @@ namespace ConsoleRpg.Helpers
                         // Current room is highlighted
                         if (room.Id == currentRoom?.Id)
                         {
-                            line.Append("[green on white][@][/]");
+                            line.Append("[green on white][[@]][/]");
                         }
                         // Room with monsters
                         else if (room.Monsters?.Any() == true)
                         {
-                            line.Append("[red][M][/]");
+                            line.Append("[red][[M]][/]");
                         }
                         // Room with players
                         else if (room.Players?.Any() == true)
                         {
-                            line.Append("[cyan][P][/]");
+                            line.Append("[cyan][[P]][/]");
                         }
                         // Empty room
                         else
                         {
-                            line.Append("[blue][■][/]");
+                            line.Append("[blue][[■]][/]");
                         }
 
                         // Add connections
@@ -131,10 +131,10 @@ namespace ConsoleRpg.Helpers
 
             // Legend
             var legend = new Panel(
-                "[green on white][@][/] = Current Location\n" +
-                "[blue][■][/] = Empty Room\n" +
-                "[red][M][/] = Monster Present\n" +
-                "[cyan][P][/] = Player Present"
+                "[green on white][[@]][/] = Current Location\n" +
+                "[blue][[■]][/] = Empty Room\n" +
+                "[red][[M]][/] = Monster Present\n" +
+                "[cyan][[P]][/] = Player Present"
             );
             legend.Header = new PanelHeader("[yellow]Legend[/]");
             legend.Border = BoxBorder.Rounded;
