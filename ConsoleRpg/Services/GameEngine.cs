@@ -14,20 +14,20 @@ public class GameEngine
     private readonly MenuManager _menuManager;
     private readonly OutputManager _outputManager;
     private readonly MapManager _mapManager;
+    private readonly ExplorationUI _explorationUI;
     private readonly ILogger<GameEngine> _logger;
 
     private Player _currentPlayer;
     private Room _currentRoom;
     private GameMode _currentMode = GameMode.Exploration;
-    private List<string> _messageLog = new List<string>();
-    private const int MaxMessages = 8;
 
-    public GameEngine(GameContext context, MenuManager menuManager, OutputManager outputManager, MapManager mapManager, ILogger<GameEngine> logger)
+    public GameEngine(GameContext context, MenuManager menuManager, OutputManager outputManager, MapManager mapManager, ExplorationUI explorationUI, ILogger<GameEngine> logger)
     {
         _context = context;
         _menuManager = menuManager;
         _outputManager = outputManager;
         _mapManager = mapManager;
+        _explorationUI = explorationUI;
         _logger = logger;
     }
 
@@ -92,8 +92,6 @@ public class GameEngine
     /// </summary>
     private void ExplorationMode()
     {
-        AnsiConsole.Clear();
-
         // Reload room with all related data
         _currentRoom = _context.Rooms
             .Include(r => r.Players)
@@ -108,68 +106,11 @@ public class GameEngine
         var allRooms = _context.Rooms.ToList();
         bool hasMonsters = _currentRoom.Monsters != null && _currentRoom.Monsters.Any();
 
-        // Create compact layout: Left (Map) | Right (Room Details + Messages)
-        var layout = new Layout("Root")
-            .SplitColumns(
-                new Layout("Map"),
-                new Layout("Right")
-            );
+        // Render UI and get player's action choice
+        var selectedAction = _explorationUI.RenderAndGetAction(allRooms, _currentRoom);
 
-        // Split right side into rows (Room Details top, Messages bottom)
-        layout["Right"].SplitRows(
-            new Layout("RoomDetails"),
-            new Layout("Messages")
-        );
-
-        // Configure panels
-        layout["Map"].Update(_mapManager.GetCompactMapPanel(allRooms, _currentRoom));
-        layout["Right"]["RoomDetails"].Update(_mapManager.GetCompactRoomDetailsPanel(_currentRoom));
-        layout["Right"]["Messages"].Update(GetMessagePanel());
-
-        // Display the layout
-        AnsiConsole.Write(layout);
-
-        // Get available actions and let user select
-        var actions = _mapManager.GetAvailableActions(_currentRoom);
-
-        var selectedAction = AnsiConsole.Prompt(
-            new SelectionPrompt<string>()
-                .Title("[white]What would you like to do?[/]")
-                .PageSize(12)
-                .AddChoices(actions));
-
+        // Handle the selected action
         HandleExplorationAction(selectedAction, hasMonsters);
-    }
-
-    /// <summary>
-    /// Adds a message to the scrolling message log
-    /// </summary>
-    private void AddMessage(string message)
-    {
-        _messageLog.Add($"[dim]{DateTime.Now:HH:mm:ss}[/] {message}");
-
-        // Keep only the last N messages
-        if (_messageLog.Count > MaxMessages)
-        {
-            _messageLog.RemoveAt(0);
-        }
-    }
-
-    /// <summary>
-    /// Gets the message panel for display
-    /// </summary>
-    private Panel GetMessagePanel()
-    {
-        var content = _messageLog.Any()
-            ? string.Join("\n", _messageLog)
-            : "[dim]Messages will appear here...[/]";
-
-        return new Panel(content)
-        {
-            Header = new PanelHeader("[yellow]Messages[/]"),
-            Border = BoxBorder.Rounded,
-            Padding = new Padding(1, 0, 1, 0)
-        };
     }
 
     /// <summary>
@@ -192,7 +133,7 @@ public class GameEngine
                 MoveToRoom(_currentRoom.WestRoomId, "West");
                 break;
             case "View Map":
-                AddMessage("[cyan]Viewing map...[/]");
+                _explorationUI.AddMessage("[cyan]Viewing map...[/]");
                 break;
             case "View Inventory":
                 ShowInventory();
@@ -208,10 +149,10 @@ public class GameEngine
                 break;
             case "Return to Main Menu":
                 _currentMode = GameMode.Admin;
-                AddMessage("[yellow]Switched to Admin Mode[/]");
+                _explorationUI.AddMessage("[yellow]Switched to Admin Mode[/]");
                 break;
             default:
-                AddMessage($"[red]Unknown action: {action}[/]");
+                _explorationUI.AddMessage($"[red]Unknown action: {action}[/]");
                 break;
         }
     }
@@ -223,7 +164,7 @@ public class GameEngine
     {
         if (!roomId.HasValue)
         {
-            AddMessage($"[red]Cannot go {direction} - no exit![/]");
+            _explorationUI.AddMessage($"[red]Cannot go {direction} - no exit![/]");
             return;
         }
 
@@ -243,7 +184,7 @@ public class GameEngine
         _logger.LogInformation("Player {PlayerName} moved {Direction} to {RoomName}",
             _currentPlayer.Name, direction, _currentRoom.Name);
 
-        AddMessage($"[green]Traveled {direction} to {_currentRoom.Name}[/]");
+        _explorationUI.AddMessage($"[green]Traveled {direction} to {_currentRoom.Name}[/]");
     }
 
     /// <summary>
@@ -251,7 +192,7 @@ public class GameEngine
     /// </summary>
     private void ShowCharacterStats()
     {
-        AddMessage($"[yellow]{_currentPlayer.Name}[/] - HP:[green]{_currentPlayer.Health}[/] XP:[cyan]{_currentPlayer.Experience}[/]");
+        _explorationUI.AddMessage($"[yellow]{_currentPlayer.Name}[/] - HP:[green]{_currentPlayer.Health}[/] XP:[cyan]{_currentPlayer.Experience}[/]");
     }
 
     /// <summary>
@@ -259,7 +200,7 @@ public class GameEngine
     /// </summary>
     private void ShowInventory()
     {
-        AddMessage($"[magenta]Inventory:[/] Equipment: {(_currentPlayer.Equipment != null ? "Equipped" : "None")}, Abilities: {_currentPlayer.Abilities?.Count ?? 0}");
+        _explorationUI.AddMessage($"[magenta]Inventory:[/] Equipment: {(_currentPlayer.Equipment != null ? "Equipped" : "None")}, Abilities: {_currentPlayer.Abilities?.Count ?? 0}");
     }
 
     /// <summary>
@@ -267,7 +208,7 @@ public class GameEngine
     /// </summary>
     private void AttackMonster()
     {
-        AddMessage("[yellow]TODO: Implement attack logic - students will complete this[/]");
+        _explorationUI.AddMessage("[yellow]TODO: Implement attack logic - students will complete this[/]");
         // Students will implement this
     }
 
@@ -276,7 +217,7 @@ public class GameEngine
     /// </summary>
     private void UseAbilityOnMonster()
     {
-        AddMessage("[yellow]TODO: Implement ability usage - students will complete this[/]");
+        _explorationUI.AddMessage("[yellow]TODO: Implement ability usage - students will complete this[/]");
         // Students will implement this
     }
 
@@ -371,7 +312,7 @@ public class GameEngine
 
         // Simply switch to exploration mode
         _currentMode = GameMode.Exploration;
-        AddMessage("[green]Welcome to the world! Use keyboard commands to navigate.[/]");
+        _explorationUI.AddMessage("[green]Welcome to the world! Select actions from the menu.[/]");
     }
 
     #endregion
