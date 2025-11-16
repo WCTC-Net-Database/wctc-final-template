@@ -10,7 +10,7 @@ DECLARE @TrainingGroundsId INT = (SELECT Id FROM Rooms WHERE Name = 'Training Gr
 DECLARE @ForestEdgeId INT = (SELECT Id FROM Rooms WHERE Name = 'Forest Edge');
 DECLARE @DeepForestId INT = (SELECT Id FROM Rooms WHERE Name = 'Deep Darkwood');
 DECLARE @LibraryId INT = (SELECT Id FROM Rooms WHERE Name = 'Ancient Library');
-DECLARE @MarketId INT = (SELECT Id FROM Rooms WHERE Name = 'Eastern Market');
+DECLARE @EasternMarketId INT = (SELECT Id FROM Rooms WHERE Name = 'Eastern Market');
 
 -- =============================================
 -- SEED ABILITIES
@@ -67,81 +67,81 @@ PRINT 'Seeding Items...';
 -- Weapons
 IF NOT EXISTS (SELECT 1 FROM Items WHERE Name = 'Rusty Sword')
 BEGIN
-    INSERT INTO Items (Name, Type, Attack, Defense)
-    VALUES ('Rusty Sword', 'Weapon', 5, 0);
+    INSERT INTO Items (Name, Type, Attack, Defense, Weight, Value)
+    VALUES ('Rusty Sword', 'Weapon', 5, 0, 4.50, 10);
 END
 
 IF NOT EXISTS (SELECT 1 FROM Items WHERE Name = 'Steel Longsword')
 BEGIN
-    INSERT INTO Items (Name, Type, Attack, Defense)
-    VALUES ('Steel Longsword', 'Weapon', 12, 0);
+    INSERT INTO Items (Name, Type, Attack, Defense, Weight, Value)
+    VALUES ('Steel Longsword', 'Weapon', 12, 0, 6.00, 50);
 END
 
 IF NOT EXISTS (SELECT 1 FROM Items WHERE Name = 'Battle Axe')
 BEGIN
-    INSERT INTO Items (Name, Type, Attack, Defense)
-    VALUES ('Battle Axe', 'Weapon', 15, 0);
+    INSERT INTO Items (Name, Type, Attack, Defense, Weight, Value)
+    VALUES ('Battle Axe', 'Weapon', 15, 0, 7.50, 65);
 END
 
 IF NOT EXISTS (SELECT 1 FROM Items WHERE Name = 'Iron Dagger')
 BEGIN
-    INSERT INTO Items (Name, Type, Attack, Defense)
-    VALUES ('Iron Dagger', 'Weapon', 7, 0);
+    INSERT INTO Items (Name, Type, Attack, Defense, Weight, Value)
+    VALUES ('Iron Dagger', 'Weapon', 7, 0, 1.20, 15);
 END
 
 IF NOT EXISTS (SELECT 1 FROM Items WHERE Name = 'Wooden Staff')
 BEGIN
-    INSERT INTO Items (Name, Type, Attack, Defense)
-    VALUES ('Wooden Staff', 'Weapon', 8, 0);
+    INSERT INTO Items (Name, Type, Attack, Defense, Weight, Value)
+    VALUES ('Wooden Staff', 'Weapon', 8, 0, 2.00, 20);
 END
 
 IF NOT EXISTS (SELECT 1 FROM Items WHERE Name = 'Longbow')
 BEGIN
-    INSERT INTO Items (Name, Type, Attack, Defense)
-    VALUES ('Longbow', 'Weapon', 10, 0);
+    INSERT INTO Items (Name, Type, Attack, Defense, Weight, Value)
+    VALUES ('Longbow', 'Weapon', 10, 0, 2.80, 35);
 END
 
 IF NOT EXISTS (SELECT 1 FROM Items WHERE Name = 'War Hammer')
 BEGIN
-    INSERT INTO Items (Name, Type, Attack, Defense)
-    VALUES ('War Hammer', 'Weapon', 16, 0);
+    INSERT INTO Items (Name, Type, Attack, Defense, Weight, Value)
+    VALUES ('War Hammer', 'Weapon', 16, 0, 8.00, 70);
 END
 
 -- Armor
 IF NOT EXISTS (SELECT 1 FROM Items WHERE Name = 'Leather Armor')
 BEGIN
-    INSERT INTO Items (Name, Type, Attack, Defense)
-    VALUES ('Leather Armor', 'Armor', 0, 5);
+    INSERT INTO Items (Name, Type, Attack, Defense, Weight, Value)
+    VALUES ('Leather Armor', 'Armor', 0, 5, 5.00, 25);
 END
 
 IF NOT EXISTS (SELECT 1 FROM Items WHERE Name = 'Chain Mail')
 BEGIN
-    INSERT INTO Items (Name, Type, Attack, Defense)
-    VALUES ('Chain Mail', 'Armor', 0, 10);
+    INSERT INTO Items (Name, Type, Attack, Defense, Weight, Value)
+    VALUES ('Chain Mail', 'Armor', 0, 10, 10.00, 60);
 END
 
 IF NOT EXISTS (SELECT 1 FROM Items WHERE Name = 'Plate Armor')
 BEGIN
-    INSERT INTO Items (Name, Type, Attack, Defense)
-    VALUES ('Plate Armor', 'Armor', 0, 15);
+    INSERT INTO Items (Name, Type, Attack, Defense, Weight, Value)
+    VALUES ('Plate Armor', 'Armor', 0, 15, 15.00, 120);
 END
 
 IF NOT EXISTS (SELECT 1 FROM Items WHERE Name = 'Mage Robes')
 BEGIN
-    INSERT INTO Items (Name, Type, Attack, Defense)
-    VALUES ('Mage Robes', 'Armor', 0, 3);
+    INSERT INTO Items (Name, Type, Attack, Defense, Weight, Value)
+    VALUES ('Mage Robes', 'Armor', 0, 3, 2.00, 40);
 END
 
 IF NOT EXISTS (SELECT 1 FROM Items WHERE Name = 'Wooden Shield')
 BEGIN
-    INSERT INTO Items (Name, Type, Attack, Defense)
-    VALUES ('Wooden Shield', 'Armor', 0, 4);
+    INSERT INTO Items (Name, Type, Attack, Defense, Weight, Value)
+    VALUES ('Wooden Shield', 'Armor', 0, 4, 4.00, 18);
 END
 
 IF NOT EXISTS (SELECT 1 FROM Items WHERE Name = 'Iron Shield')
 BEGIN
-    INSERT INTO Items (Name, Type, Attack, Defense)
-    VALUES ('Iron Shield', 'Armor', 0, 8);
+    INSERT INTO Items (Name, Type, Attack, Defense, Weight, Value)
+    VALUES ('Iron Shield', 'Armor', 0, 8, 7.00, 45);
 END
 
 -- =============================================
@@ -218,9 +218,9 @@ INSERT INTO Players (Name, Health, Experience, EquipmentId, RoomId)
 VALUES ('Thorin Ironshield', 150, 180, @TankEquipId, @TownSquareId);
 DECLARE @ThorinId INT = SCOPE_IDENTITY();
 
--- Ranger in Market
+-- Ranger in Eastern Market
 INSERT INTO Players (Name, Health, Experience, EquipmentId, RoomId)
-VALUES ('Elara Swiftarrow', 95, 160, @RangerEquipId, @MarketId);
+VALUES ('Elara Swiftarrow', 95, 160, @RangerEquipId, @EasternMarketId);
 DECLARE @ElaraId INT = SCOPE_IDENTITY();
 
 -- Knight in Town Square
@@ -232,6 +232,7 @@ DECLARE @ReginaldId INT = SCOPE_IDENTITY();
 INSERT INTO Players (Name, Health, Experience, EquipmentId, RoomId)
 VALUES ('Tom the Hopeful', 70, 50, @BeginnerEquipId, @TavernId);
 DECLARE @TomId INT = SCOPE_IDENTITY();
+
 
 -- =============================================
 -- ASSIGN ABILITIES TO PLAYERS
@@ -304,10 +305,10 @@ VALUES ('Cursed Scholar', 40, 6, 'Goblin', @LibraryId);
 
 -- Bandits near Market
 INSERT INTO Monsters (Name, Health, AggressionLevel, MonsterType, RoomId)
-VALUES ('Bandit Thug', 55, 7, 'Goblin', @MarketId);
+VALUES ('Bandit Thug', 55, 7, 'Goblin', @EasternMarketId);
 
 INSERT INTO Monsters (Name, Health, AggressionLevel, MonsterType, RoomId)
-VALUES ('Bandit Leader', 70, 10, 'Goblin', @MarketId);
+VALUES ('Bandit Leader', 70, 10, 'Goblin', @EasternMarketId);
 
 -- Training Dummy (Low aggression for practice)
 INSERT INTO Monsters (Name, Health, AggressionLevel, MonsterType, RoomId)

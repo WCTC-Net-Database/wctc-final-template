@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ConsoleRpgEntities.Migrations
 {
     [DbContext(typeof(GameContext))]
-    [Migration("20251115005346_InitialSeedData")]
-    partial class InitialSeedData
+    [Migration("20251116000840_SeedWorldContent")]
+    partial class SeedWorldContent
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -182,7 +182,7 @@ namespace ConsoleRpgEntities.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("Weight")
-                        .HasColumnType("decimal(3,2)");
+                        .HasColumnType("decimal(5,2)");
 
                     b.HasKey("Id");
 

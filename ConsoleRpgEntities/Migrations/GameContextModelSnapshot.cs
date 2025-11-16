@@ -180,7 +180,7 @@ namespace ConsoleRpgEntities.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("Weight")
-                        .HasColumnType("decimal(3,2)");
+                        .HasColumnType("decimal(5,2)");
 
                     b.HasKey("Id");
 

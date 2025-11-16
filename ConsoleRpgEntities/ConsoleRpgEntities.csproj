@@ -19,9 +19,7 @@
     <None Remove="Migrations\20251115005110_SeedRooms.cs~RF12303f63.TMP" />
     <None Remove="Migrations\Scripts\InitialSeedData.rollback.sql" />
     <None Remove="Migrations\Scripts\InitialSeedData.sql" />
-    <None Remove="Migrations\Scripts\SeedEquipment.rollback.sql" />
     <None Remove="Migrations\Scripts\SeedEquipment.rollback.sql~RF8555f2c5.TMP" />
-    <None Remove="Migrations\Scripts\SeedEquipment.sql" />
     <None Remove="Migrations\Scripts\SeedRooms.rollback.sql" />
     <None Remove="Migrations\Scripts\SeedRooms.sql" />
     <None Remove="Models\Abilities\Ability.cs~RF7a28a58b.TMP" />
@@ -29,12 +27,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Migrations\Scripts\SeedEquipment.sql">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Migrations\Scripts\SeedEquipment.rollback.sql">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="Migrations\Scripts\InitialSeedData.rollback.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -68,12 +60,6 @@
   <ItemGroup>
     <None Update="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Migrations\Scripts\SeedItems.rollback.sql">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Migrations\Scripts\SeedItems.sql">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Migrations\Scripts\SeedRooms.rollback.sql">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
