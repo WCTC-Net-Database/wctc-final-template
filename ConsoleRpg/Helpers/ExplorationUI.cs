@@ -11,7 +11,9 @@ public class ExplorationUI
 {
     private readonly MapManager _mapManager;
     private readonly List<string> _messageLog = new List<string>();
+    private readonly List<string> _outputLog = new List<string>();
     private const int MaxMessages = 8;
+    private const int MaxOutputLines = 15;
 
     public ExplorationUI(MapManager mapManager)
     {
@@ -33,6 +35,7 @@ public class ExplorationUI
 
         // Display the layout
         AnsiConsole.Write(layout);
+        AnsiConsole.WriteLine();
 
         // Get available actions and let user select
         var actions = _mapManager.GetAvailableActions(currentRoom);
@@ -53,26 +56,37 @@ public class ExplorationUI
     private Layout BuildLayout(IEnumerable<Room> allRooms, Room currentRoom)
     {
         // LAYOUT STRUCTURE - Easy to modify and experiment with!
-        // ┌──────────┬────────────┐
-        // │          │ Room Info  │
-        // │   Map    ├────────────┤
-        // │          │ Messages   │
-        // └──────────┴────────────┘
+        // ┌───────────┬────────────┐
+        // │   Map     │ Room Info  │
+        // ├───────────┼────────────┤
+        // │   User    │            │
+        // │ Prompting │  Summary   │
+        // │    and    │  Message   │
+        // │   Full    │   Log      │
+        // │  Output   │            │
+        // └───────────┴────────────┘
 
         var layout = new Layout("Root")
             .SplitColumns(
-                new Layout("Map"),
+                new Layout("Left"),
                 new Layout("Right")
             );
 
+        // Split left side into rows (Map top, Output bottom)
+        layout["Left"].SplitRows(
+            new Layout("Map").Ratio(1),
+            new Layout("Output").Ratio(2)
+        );
+
         // Split right side into rows (Room Details top, Messages bottom)
         layout["Right"].SplitRows(
-            new Layout("RoomDetails"),
-            new Layout("Messages")
+            new Layout("RoomDetails").Ratio(1),
+            new Layout("Messages").Ratio(2)
         );
 
         // Configure panels
-        layout["Map"].Update(_mapManager.GetCompactMapPanel(allRooms, currentRoom));
+        layout["Left"]["Map"].Update(_mapManager.GetCompactMapPanel(allRooms, currentRoom));
+        layout["Left"]["Output"].Update(GetOutputPanel());
         layout["Right"]["RoomDetails"].Update(_mapManager.GetCompactRoomDetailsPanel(currentRoom));
         layout["Right"]["Messages"].Update(GetMessagePanel());
 
@@ -80,7 +94,7 @@ public class ExplorationUI
     }
 
     /// <summary>
-    /// Adds a message to the scrolling message log
+    /// Adds a succinct message to the summary message log (right side)
     /// </summary>
     public void AddMessage(string message)
     {
@@ -94,17 +108,48 @@ public class ExplorationUI
     }
 
     /// <summary>
-    /// Gets the message panel for display
+    /// Adds detailed output to the full output area (left side)
+    /// </summary>
+    public void AddOutput(string output)
+    {
+        _outputLog.Add(output);
+
+        // Keep only the last N lines
+        if (_outputLog.Count > MaxOutputLines)
+        {
+            _outputLog.RemoveAt(0);
+        }
+    }
+
+    /// <summary>
+    /// Gets the output panel for detailed information display
+    /// </summary>
+    private Panel GetOutputPanel()
+    {
+        var content = _outputLog.Any()
+            ? string.Join("\n", _outputLog)
+            : "[dim]Action output will appear here...[/]";
+
+        return new Panel(content)
+        {
+            Header = new PanelHeader("[yellow]Output[/]"),
+            Border = BoxBorder.Rounded,
+            Padding = new Padding(1, 0, 1, 0)
+        };
+    }
+
+    /// <summary>
+    /// Gets the message panel for succinct summary display
     /// </summary>
     private Panel GetMessagePanel()
     {
         var content = _messageLog.Any()
             ? string.Join("\n", _messageLog)
-            : "[dim]Messages will appear here...[/]";
+            : "[dim]Summary messages...[/]";
 
         return new Panel(content)
         {
-            Header = new PanelHeader("[yellow]Messages[/]"),
+            Header = new PanelHeader("[yellow]Summary Log[/]"),
             Border = BoxBorder.Rounded,
             Padding = new Padding(1, 0, 1, 0)
         };
@@ -116,5 +161,13 @@ public class ExplorationUI
     public void ClearMessages()
     {
         _messageLog.Clear();
+    }
+
+    /// <summary>
+    /// Clears the output log
+    /// </summary>
+    public void ClearOutput()
+    {
+        _outputLog.Clear();
     }
 }
