@@ -267,5 +267,52 @@ namespace ConsoleRpg.Helpers
 
             return actions;
         }
+
+        /// <summary>
+        /// Displays available actions based on the current room context
+        /// </summary>
+        public void DisplayAvailableActions(Room currentRoom, bool hasMonsters)
+        {
+            var actionsPanel = new Panel(BuildActionsList(currentRoom, hasMonsters));
+            actionsPanel.Header = new PanelHeader("[green]Available Actions[/]");
+            actionsPanel.Border = BoxBorder.Rounded;
+            AnsiConsole.Write(actionsPanel);
+            AnsiConsole.WriteLine();
+        }
+
+        private string BuildActionsList(Room currentRoom, bool hasMonsters)
+        {
+            var actions = new List<string>();
+
+            // Navigation
+            actions.Add("[cyan]Navigation:[/]");
+            if (currentRoom?.NorthRoom != null)
+                actions.Add("  [white]N[/] - Go North");
+            if (currentRoom?.SouthRoom != null)
+                actions.Add("  [white]S[/] - Go South");
+            if (currentRoom?.EastRoom != null)
+                actions.Add("  [white]E[/] - Go East");
+            if (currentRoom?.WestRoom != null)
+                actions.Add("  [white]W[/] - Go West");
+
+            // Combat (if monsters present)
+            if (hasMonsters)
+            {
+                actions.Add("");
+                actions.Add("[red]Combat:[/]");
+                actions.Add("  [white]A[/] - Attack Monster");
+                actions.Add("  [white]B[/] - Use Ability");
+            }
+
+            // General actions
+            actions.Add("");
+            actions.Add("[yellow]Other:[/]");
+            actions.Add("  [white]M[/] - View Map");
+            actions.Add("  [white]I[/] - View Inventory");
+            actions.Add("  [white]X[/] - Admin Mode");
+            actions.Add("  [white]Q[/] - Quit Game");
+
+            return string.Join("\n", actions);
+        }
     }
 }
