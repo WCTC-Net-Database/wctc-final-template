@@ -129,6 +129,7 @@ public class GameEngine
 
         // Configure left side
         layout["Left"]["Map"].Update(_mapManager.GetCompactMapPanel(allRooms, _currentRoom));
+        layout["Left"]["Actions"].Update(_mapManager.GetAvailableActionsPanel(_currentRoom));
 
         // Configure right side
         layout["Right"]["RoomDetails"].Update(_mapManager.GetCompactRoomDetailsPanel(_currentRoom));

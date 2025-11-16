@@ -428,6 +428,29 @@ namespace ConsoleRpg.Helpers
         }
 
         /// <summary>
+        /// Gets a panel showing available actions for selection
+        /// </summary>
+        public Panel GetAvailableActionsPanel(Room currentRoom)
+        {
+            var actions = GetAvailableActions(currentRoom);
+
+            var sb = new StringBuilder();
+            sb.AppendLine("[white]Available Actions:[/]");
+            sb.AppendLine();
+
+            foreach (var action in actions)
+            {
+                sb.AppendLine($"  [cyan]•[/] {action}");
+            }
+
+            return new Panel(sb.ToString().TrimEnd())
+            {
+                Header = new PanelHeader("[green]Actions[/]"),
+                Border = BoxBorder.Rounded
+            };
+        }
+
+        /// <summary>
         /// Gets available actions based on the current room context
         /// </summary>
         public List<string> GetAvailableActions(Room currentRoom)
