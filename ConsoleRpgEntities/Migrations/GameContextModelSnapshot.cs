@@ -59,7 +59,7 @@ namespace ConsoleRpgEntities.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Abilities");
+                    b.ToTable("Abilities", (string)null);
 
                     b.HasDiscriminator<string>("AbilityType").HasValue("Ability");
                 });
@@ -93,7 +93,7 @@ namespace ConsoleRpgEntities.Migrations
 
                     b.HasIndex("RoomId");
 
-                    b.ToTable("Monsters");
+                    b.ToTable("Monsters", (string)null);
 
                     b.HasDiscriminator<string>("MonsterType").HasValue("Monster");
                 });
@@ -128,7 +128,7 @@ namespace ConsoleRpgEntities.Migrations
 
                     b.HasIndex("RoomId");
 
-                    b.ToTable("Players");
+                    b.ToTable("Players", (string)null);
                 });
 
             modelBuilder.Entity("ConsoleRpgEntities.Models.Equipments.Equipment", b =>
@@ -151,7 +151,7 @@ namespace ConsoleRpgEntities.Migrations
 
                     b.HasIndex("WeaponId");
 
-                    b.ToTable("Equipments");
+                    b.ToTable("Equipments", (string)null);
                 });
 
             modelBuilder.Entity("ConsoleRpgEntities.Models.Equipments.Item", b =>
@@ -184,7 +184,7 @@ namespace ConsoleRpgEntities.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Items");
+                    b.ToTable("Items", (string)null);
                 });
 
             modelBuilder.Entity("ConsoleRpgEntities.Models.Rooms.Room", b =>
@@ -231,7 +231,7 @@ namespace ConsoleRpgEntities.Migrations
 
                     b.HasIndex("WestRoomId");
 
-                    b.ToTable("Rooms");
+                    b.ToTable("Rooms", (string)null);
                 });
 
             modelBuilder.Entity("ConsoleRpgEntities.Models.Abilities.PlayerAbilities.ShoveAbility", b =>

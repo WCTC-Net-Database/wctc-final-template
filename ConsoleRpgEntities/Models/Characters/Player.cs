@@ -22,6 +22,11 @@ namespace ConsoleRpgEntities.Models.Characters
         public virtual ICollection<Ability> Abilities { get; set; }
         public virtual Room Room { get; set; }
 
+        public Player()
+        {
+            Abilities = new List<Ability>();
+        }
+
         public void Attack(ITargetable target)
         {
             // Player-specific attack logic

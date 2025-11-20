@@ -22,24 +22,22 @@ namespace ConsoleRpgEntities.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Configure TPH for Character hierarchy
+            // Optional: keep TPH discriminator mappings if you want explicit discriminator values
             modelBuilder.Entity<Monster>()
-                .HasDiscriminator<string>(m=> m.MonsterType)
-                .HasValue<Monster>("Monster")
+                .HasDiscriminator<string>(m => m.MonsterType)
                 .HasValue<Goblin>("Goblin");
 
-            // Configure TPH for Ability hierarchy
             modelBuilder.Entity<Ability>()
-                .HasDiscriminator<string>(pa=>pa.AbilityType)
+                .HasDiscriminator<string>(pa => pa.AbilityType)
                 .HasValue<ShoveAbility>("ShoveAbility");
 
-            // Configure many-to-many relationship
+            // Keep Player<->Ability join-table name if you must preserve existing schema
             modelBuilder.Entity<Player>()
                 .HasMany(p => p.Abilities)
                 .WithMany(a => a.Players)
                 .UsingEntity(j => j.ToTable("PlayerAbilities"));
 
-            // Configure Room relationships with Players and Monsters
+            // Configure Room relationships with Players and Monsters (can be inferred, but explicit is fine)
             modelBuilder.Entity<Room>()
                 .HasMany(r => r.Players)
                 .WithOne(p => p.Room)
@@ -54,8 +52,8 @@ namespace ConsoleRpgEntities.Data
                 .OnDelete(DeleteBehavior.Restrict)
                 .IsRequired(false);
 
-            // Configure Room self-referencing relationships for exits
-            // These relationships allow rooms to connect to other rooms via North/South/East/West
+            // IMPORTANT: explicit configuration for multiple self-referencing Room relationships.
+            // EF Core needs each relationship disambiguated because they use the same CLR type.
             modelBuilder.Entity<Room>()
                 .HasOne(r => r.NorthRoom)
                 .WithMany()
@@ -84,7 +82,7 @@ namespace ConsoleRpgEntities.Data
                 .OnDelete(DeleteBehavior.Restrict)
                 .IsRequired(false);
 
-            // Call the separate configuration method to set up Equipment entity relationships
+            // Equipment -> Item relations (keep to avoid multiple cascade paths)
             ConfigureEquipmentRelationships(modelBuilder);
 
             base.OnModelCreating(modelBuilder);
@@ -92,38 +90,17 @@ namespace ConsoleRpgEntities.Data
 
         private void ConfigureEquipmentRelationships(ModelBuilder modelBuilder)
         {
-            // Configuring the Equipment entity to handle relationships with Item entities (Weapon and Armor)
-            // without causing multiple cascade paths in SQL Server.
-
-            // Equipment has a nullable foreign key WeaponId, pointing to the Item entity.
-            // Setting DeleteBehavior.Restrict ensures that deleting an Item (Weapon) 
-            // will NOT cascade delete any Equipment rows that reference it.
-            // This prevents conflicts that arise with multiple cascading paths.
             modelBuilder.Entity<Equipment>()
-                .HasOne(e => e.Weapon)  // Define the relationship to the Weapon item
-                .WithMany()             // Equipment doesn't need to navigate back to Item
-                .HasForeignKey(e => e.WeaponId)  // Specifies the foreign key column in Equipment
-                //.OnDelete(DeleteBehavior.Restrict)  // Prevents cascading deletes, avoids multiple paths
+                .HasOne(e => e.Weapon)
+                .WithMany()
+                .HasForeignKey(e => e.WeaponId)
                 .IsRequired(false);
 
-            // Similar configuration for ArmorId, also pointing to the Item entity.
-            // Here we are using DeleteBehavior.Restrict for the Armor foreign key relationship as well.
-            // The goal is to avoid cascade paths from both WeaponId and ArmorId foreign keys.
             modelBuilder.Entity<Equipment>()
-                .HasOne(e => e.Armor)  // Define the relationship to the Armor item
-                .WithMany()            // No need for reverse navigation back to Equipment
-                .HasForeignKey(e => e.ArmorId)  // Sets ArmorId as the foreign key in Equipment
-                //.OnDelete(DeleteBehavior.Restrict)  // Prevents cascading deletes to avoid conflict
+                .HasOne(e => e.Armor)
+                .WithMany()
+                .HasForeignKey(e => e.ArmorId)
                 .IsRequired(false);
-
-            // Explanation of Why DeleteBehavior.Restrict:
-            // Cascade paths occur when there are multiple relationships in one table pointing to another,
-            // each with cascading delete behavior. SQL Server restricts such configurations to prevent 
-            // accidental recursive deletions. Here, by setting DeleteBehavior.Restrict, deleting an Item
-            // (Weapon or Armor) will simply nullify the WeaponId or ArmorId in Equipment rather than 
-            // cascading a delete through multiple paths.
         }
     }
 }
-
-

@@ -10,7 +10,7 @@ public class ServiceResult
     public string Message { get; }
     public string DetailedOutput { get; }
 
-    private ServiceResult(bool success, string message, string detailedOutput = null)
+    public ServiceResult(bool success, string message, string detailedOutput = null)
     {
         Success = success;
         Message = message;

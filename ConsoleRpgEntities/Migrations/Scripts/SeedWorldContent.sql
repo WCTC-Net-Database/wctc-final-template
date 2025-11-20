@@ -291,28 +291,28 @@ VALUES ('Goblin Shaman', 35, 10, 'Goblin', @DeepForestId);
 
 -- Wolves near Forest Edge
 INSERT INTO Monsters (Name, Health, AggressionLevel, MonsterType, RoomId)
-VALUES ('Gray Wolf', 45, 7, 'Monster', @ForestEdgeId);
+VALUES ('Gray Wolf', 45, 7, 'Goblin', @ForestEdgeId);
 
 INSERT INTO Monsters (Name, Health, AggressionLevel, MonsterType, RoomId)
-VALUES ('Alpha Wolf', 60, 9, 'Monster', @ForestEdgeId);
+VALUES ('Alpha Wolf', 60, 9, 'Goblin', @ForestEdgeId);
 
 -- Skeleton in Ancient Library
 INSERT INTO Monsters (Name, Health, AggressionLevel, MonsterType, RoomId)
-VALUES ('Ancient Skeleton', 50, 8, 'Monster', @LibraryId);
+VALUES ('Ancient Skeleton', 50, 8, 'Goblin', @LibraryId);
 
 INSERT INTO Monsters (Name, Health, AggressionLevel, MonsterType, RoomId)
-VALUES ('Cursed Scholar', 40, 6, 'Monster', @LibraryId);
+VALUES ('Cursed Scholar', 40, 6, 'Goblin', @LibraryId);
 
 -- Bandits near Market
 INSERT INTO Monsters (Name, Health, AggressionLevel, MonsterType, RoomId)
-VALUES ('Bandit Thug', 55, 7, 'Monster', @EasternMarketId);
+VALUES ('Bandit Thug', 55, 7, 'Goblin', @EasternMarketId);
 
 INSERT INTO Monsters (Name, Health, AggressionLevel, MonsterType, RoomId)
-VALUES ('Bandit Leader', 70, 10, 'Monster', @EasternMarketId);
+VALUES ('Bandit Leader', 70, 10, 'Goblin', @EasternMarketId);
 
 -- Training Dummy (Low aggression for practice)
 INSERT INTO Monsters (Name, Health, AggressionLevel, MonsterType, RoomId)
-VALUES ('Training Dummy', 100, 0, 'Monster', @TrainingGroundsId);
+VALUES ('Training Dummy', 100, 0, 'Goblin', @TrainingGroundsId);
 
 PRINT 'World content seeding completed successfully!';
 PRINT '================================================';
